@@ -30,6 +30,8 @@ public class SeasonTeamPlayer{
     @JoinColumn(name = "player_id")
     private Player player;
 
+    @Column(name = "cost")
+    private double cost;
 
     public Player getPlayer() {
         return player;
@@ -38,4 +40,6 @@ public class SeasonTeamPlayer{
     public void setPlayer(Player player) {
         this.player = player;
     }
+
+
 }

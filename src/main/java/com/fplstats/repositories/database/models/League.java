@@ -1,6 +1,8 @@
 package com.fplstats.repositories.database.models;
 
+import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.LazyGroup;
 
 import javax.persistence.*;
 
