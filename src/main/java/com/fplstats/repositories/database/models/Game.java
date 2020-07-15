@@ -12,6 +12,10 @@ public class Game{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int Id;
 
+    @ManyToOne
+    @JoinColumn(name = "season_id")
+    private Season season;
+
     @Column(name = "game_day")
     private Date gameDay;
 
@@ -52,5 +56,13 @@ public class Game{
 
     public void setGameDay(Date gameDay) {
         this.gameDay = gameDay;
+    }
+
+    public Season getSeason() {
+        return season;
+    }
+
+    public void setSeason(Season season) {
+        this.season = season;
     }
 }

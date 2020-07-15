@@ -33,6 +33,28 @@ public class FplStatsController {
         return "Greetings from Spring Boot!";
     }
 
+    @RequestMapping("/CollectUnderstatNestedData")
+    public String CollectNestedData(@RequestParam(name = "league") String league,
+                                  @RequestParam(name = "year") int year) {
+
+        String result = "Fel";
+
+        try
+        {
+            result = dataCollectorService.collectUnderstatNestedData(league, year);
+        }
+        catch (Exception e)
+        {
+            System.out.println("IOException");
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+
+    }
+
+
     @RequestMapping("/CollectUnderstatBaseData")
     public String CollectBaseData(@RequestParam(name = "league") String league,
                                            @RequestParam(name = "year") int year){

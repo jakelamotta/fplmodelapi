@@ -19,7 +19,7 @@ public class DataCollectorService {
     public String collectUnderstatNestedData(String leagueName, int startYear){
 
         EntityProvider entityProvider = new EntityProvider();
-        Result<List<Integer>> result = entityProvider.getMatchIds(leagueName,startYear);
+        Result<List<Integer>> result = entityProvider.getGameIds(leagueName,startYear);
         Result<String> understatResult;
 
         UnderstatsProvider understatsProvider = new UnderstatsProvider();

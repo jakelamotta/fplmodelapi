@@ -13,10 +13,10 @@ public class League {
     @javax.persistence.Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int Id;
+    private int id;
 
     public int getId() {
-        return Id;
+        return id;
     }
 
     @Column(name = "name")
