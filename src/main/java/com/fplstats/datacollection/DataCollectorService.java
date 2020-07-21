@@ -3,6 +3,7 @@ package com.fplstats.datacollection;
 import com.fplstats.common.dto.fplstats.Result;
 import com.fplstats.repositories.database.EntityProvider;
 import com.fplstats.repositories.database.FileProvider;
+import com.fplstats.repositories.services.fpl.FplApiProvider;
 import com.fplstats.repositories.services.understat.UnderstatsProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,24 @@ import java.util.List;
 @Configuration
 public class DataCollectorService {
 
+    public String collectFplData() throws IOException {
+
+        FplApiProvider provider = new FplApiProvider();
+
+        Result<String> result = provider.getFplPlayerData();
+        result.ErrorMessage =  "General error collectFplData";
+
+        if (result.Success){
+
+            result = FileProvider.WriteFileContent(result.Data, "FPL\\data.txt");
+        }
+
+        if (result.Success){
+            return "Successfull fetch!";
+        }
+
+        return result.ErrorMessage;
+    }
 
     public String collectUnderstatNestedData(String leagueName, int startYear){
 
