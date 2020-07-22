@@ -17,11 +17,11 @@ public class UnderstatGame{
     @Column(name = "isResult")
     private boolean isResult;
 
-    @Column(name = "homeTeamId")
-    private boolean homeTeamId;
+    @Column(name = "homeTeamName")
+    private String homeTeamName;
 
-    @Column(name = "awayTeamId")
-    private boolean awayTeamId;
+    @Column(name = "awayTeamName")
+    private String awayTeamName;
 
     @Column(name = "datetime")
     private Date datetime;
@@ -42,20 +42,20 @@ public class UnderstatGame{
         isResult = result;
     }
 
-    public boolean isHomeTeamId() {
-        return homeTeamId;
+    public String getHomeTeamName() {
+        return homeTeamName;
     }
 
-    public void setHomeTeamId(boolean homeTeamId) {
-        this.homeTeamId = homeTeamId;
+    public void setHomeTeamName(String homeTeamName) {
+        this.homeTeamName = homeTeamName;
     }
 
-    public boolean isAwayTeamId() {
-        return awayTeamId;
+    public String getAwayTeamName() {
+        return awayTeamName;
     }
 
-    public void setAwayTeamId(boolean awayTeamId) {
-        this.awayTeamId = awayTeamId;
+    public void setAwayTeamName(String awayTeamName) {
+        this.awayTeamName = awayTeamName;
     }
 
     public Date getDatetime() {

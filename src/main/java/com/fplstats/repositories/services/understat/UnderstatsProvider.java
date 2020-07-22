@@ -50,7 +50,13 @@ public class UnderstatsProvider {
     }
 
     @Bean
-    public Result<String> getMatchPlayersByMatch(int next) {
-        throw new NotImplementedException();
+    public Result<String> getMatchPlayersByMatch(int gameId) throws IOException, InterruptedException {
+        String[] args = new String[]{String.valueOf(gameId), ""};
+
+        String path = "C:\\Users\\krijoh3\\IdeaProjects\\fplstats\\src\\main\\java\\com\\fplstats\\repositories\\services\\understat\\getGamePlayers.py";
+
+        Result<String> result = PythonUtility.ExecutePythonScript(path, args);
+
+        return result;
     }
 }
