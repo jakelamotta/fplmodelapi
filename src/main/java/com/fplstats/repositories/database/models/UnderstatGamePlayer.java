@@ -2,13 +2,17 @@ package com.fplstats.repositories.database.models;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
 @Table(name = "understatGamePlayer")
 public class UnderstatGamePlayer{
 
-    @javax.persistence.Id
+    @Id
+    @Column(name = "understatid")
+    private int understatId;
+
     @Column(name = "understatgameid")
     private int understatGameId;
 
@@ -173,5 +177,13 @@ public class UnderstatGamePlayer{
 
     public void setUnderstatTeamId(int understatTeamId) {
         this.understatTeamId = understatTeamId;
+    }
+
+    public int getUnderstatId() {
+        return understatId;
+    }
+
+    public void setUnderstatId(int understatId) {
+        this.understatId = understatId;
     }
 }

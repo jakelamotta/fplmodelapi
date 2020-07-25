@@ -16,4 +16,20 @@ public class MatchUnderstatPlayer implements Serializable {
     @ManyToOne
     @JoinColumn(name = "player_id")
     private Player player;
+
+    public UnderstatPlayer getUnderstatPlayer() {
+        return understatPlayer;
+    }
+
+    public void setUnderstatPlayer(UnderstatPlayer understatPlayer) {
+        this.understatPlayer = understatPlayer;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
 }

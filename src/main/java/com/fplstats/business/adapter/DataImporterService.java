@@ -1,7 +1,8 @@
-package com.fplstats.adapter;
+package com.fplstats.business.adapter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fplstats.common.dto.adapter.FplJsonObject;
 import com.fplstats.common.dto.adapter.UnderstatGameJsonObject;
@@ -10,16 +11,15 @@ import com.fplstats.common.dto.adapter.UnderstatPlayerJsonObject;
 import com.fplstats.common.dto.fplstats.Result;
 import com.fplstats.repositories.database.EntityProvider;
 import com.fplstats.repositories.database.FileProvider;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.File;
+import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class DataImporterService {
@@ -92,18 +92,59 @@ public class DataImporterService {
         String basePath = "C:\\Users\\krijoh3\\IdeaProjects\\fplstats\\src\\main\\resources\\data\\";
         String path = basePath + "\\Understat\\" + leagueName + "\\" + year;
 
+        EntityProvider provider = new EntityProvider();
+
         List<String> paths = Files.walk(Paths.get(path)).filter(Files::isDirectory).map(s -> s.toString()).collect(Collectors.toList());
         Iterator it = paths.iterator();
         String temp = it.next().toString();
-        List<UnderstatGamePlayerJsonObject> understatGamePlayerJsonObjectList;
-        Result<String> result = new Result<>();
+
+        List<UnderstatGamePlayerJsonObject> understatGamePlayerJsonObjectList = new ArrayList<>();
+
+        JsonNode jsonNode;
+        Result<String> result;
+        int gameId;
 
         while(it.hasNext()){
             ObjectMapper objectMapper = new ObjectMapper();
-            understatGamePlayerJsonObjectList = objectMapper.readValue(result.Data, new TypeReference<List<UnderstatGamePlayerJsonObject>>(){});
+            temp = it.next().toString();
 
+            String gameIdAsString = temp.substring(path.length());
+            gameId = Integer.valueOf(gameIdAsString);
 
-            FileProvider.DeleteItem(it.next().toString());
+            result = FileProvider.ReadFileContent( temp + "\\games.txt", true);
+            jsonNode = objectMapper.readTree(result.Data);
+
+            JsonNode homeNode = jsonNode.get("h");
+            homeNode.fieldNames()
+                    .forEachRemaining(f -> {
+                        try {
+                            String t = homeNode.get(f).toString();
+                            UnderstatGamePlayerJsonObject obj = objectMapper.readValue(homeNode.get(f).toString(), UnderstatGamePlayerJsonObject.class);
+                            understatGamePlayerJsonObjectList.add(obj);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                    });
+
+            JsonNode awayNode = jsonNode.get("a");
+            homeNode.fieldNames()
+                    .forEachRemaining(f -> {
+                        try {
+                            String t = homeNode.get(f).toString();
+                            UnderstatGamePlayerJsonObject obj = objectMapper.readValue(homeNode.get(f).toString(), UnderstatGamePlayerJsonObject.class);
+                            understatGamePlayerJsonObjectList.add(obj);
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
+
+                    });
+
+            result = provider.saveUnderstatGamePlayers(leagueName, year, understatGamePlayerJsonObjectList, gameId);
+
+            if (result.Success){
+                FileProvider.DeleteItem(temp);
+            }
         }
 
         return "Successfull delete";

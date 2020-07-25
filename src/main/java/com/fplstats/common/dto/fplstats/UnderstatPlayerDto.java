@@ -1,8 +1,9 @@
 package com.fplstats.common.dto.fplstats;
 
-public class TeamDto{
+public class UnderstatPlayerDto{
 
     private int id;
+
     private String name;
 
     public int getId() {

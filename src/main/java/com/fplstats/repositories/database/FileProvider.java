@@ -40,10 +40,21 @@ public class FileProvider {
         return result;
     }
 
-    public static Result<String> ReadFileContent(String filename) {
+    public static Result<String> ReadFileContent(String filename){
+        return ReadFileContent(filename, false);
+    }
+
+    public static Result<String> ReadFileContent(String filename, boolean absolutePath) {
 
         String basePath = "C:\\Users\\krijoh3\\IdeaProjects\\fplstats\\src\\main\\resources\\data\\";
-        String path = basePath + filename;
+        String path;
+
+        if (absolutePath){
+            path = filename;
+        }
+        else{
+            path = basePath + filename;
+        }
         Result<String> result = new Result<>();
         result.Success = true;
         result.Data = "";

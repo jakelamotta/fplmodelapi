@@ -1,7 +1,8 @@
 package com.fplstats.api;
 
-import com.fplstats.adapter.DataImporterService;
-import com.fplstats.datacollection.DataCollectorService;
+import com.fplstats.business.adapter.DataImporterService;
+import com.fplstats.business.adapter.MatcherService;
+import com.fplstats.business.datacollection.DataCollectorService;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,7 +15,7 @@ import java.io.IOException;
 @RestController
 public class FplStatsController {
 
-
+    private MatcherService matcherService;
     private DataCollectorService dataCollectorService;
     private DataImporterService importerService;
 
@@ -22,6 +23,7 @@ public class FplStatsController {
 
         dataCollectorService = new DataCollectorService();
         importerService = new DataImporterService();
+        matcherService = new MatcherService();
     }
 
 
@@ -29,6 +31,44 @@ public class FplStatsController {
     public String Index(){
         return "Greetings from Spring Boot!";
     }
+
+    @RequestMapping("/Adapter/FPL")
+    public String AdaptFplData()
+    {
+        String result = "Fel";
+
+        try
+        {
+            result = matcherService.matchFplData();
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
+    @RequestMapping("/Adapter/Understat/Player")
+    public String AdaptUnderstatPlayerData()
+    {
+        String result = "Fel";
+
+        try
+        {
+            result = matcherService.matchUnderstatPlayer();
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
+
 
     @RequestMapping("/ImportUnderstatGamePlayers")
     public String ImportUnderstatGamePlayers(){

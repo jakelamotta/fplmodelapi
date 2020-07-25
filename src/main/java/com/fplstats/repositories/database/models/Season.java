@@ -13,12 +13,19 @@ public class Season {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int Id;
 
+    @Column(name = "startYear")
+    private int startYear;
+
+    @Column(name = "isactive")
+    private boolean isActive;
+
+    @ManyToOne
+    @JoinColumn(name = "league_id")
+    private League league;
+
     public int getId() {
         return Id;
     }
-
-    @Column(name = "startYear")
-    private int startYear;
 
     public int getStartYear() {
         return startYear;
@@ -28,9 +35,6 @@ public class Season {
         this.startYear = startYear;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "league_id")
-    private League league;
 
     public League getLeague() {
         return league;
@@ -38,5 +42,13 @@ public class Season {
 
     public void setLeagueId(League league) {
         this.league = league;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

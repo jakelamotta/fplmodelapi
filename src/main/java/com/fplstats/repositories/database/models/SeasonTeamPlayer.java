@@ -10,13 +10,20 @@ public class SeasonTeamPlayer{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int Id;
 
-    public int getId() {
-        return Id;
-    }
-
     @ManyToOne
     @JoinColumn(name = "seasonteam_id")
     private SeasonTeam seasonTeam;
+
+    @ManyToOne
+    @JoinColumn(name = "player_id")
+    private Player player;
+
+    @Column(name = "isactive")
+    private boolean isActive;
+
+    public int getId() {
+        return Id;
+    }
 
     public SeasonTeam getSeasonTeam() {
         return seasonTeam;
@@ -26,13 +33,6 @@ public class SeasonTeamPlayer{
         this.seasonTeam = seasonTeam;
     }
 
-    @ManyToOne
-    @JoinColumn(name = "player_id")
-    private Player player;
-
-    @Column(name = "cost")
-    private double cost;
-
     public Player getPlayer() {
         return player;
     }
@@ -41,5 +41,11 @@ public class SeasonTeamPlayer{
         this.player = player;
     }
 
+    public boolean isCurrent() {
+        return isActive;
+    }
 
+    public void setCurrent(boolean current) {
+        isActive = current;
+    }
 }

@@ -1,14 +1,10 @@
-package com.fplstats.datacollection;
+package com.fplstats.business.datacollection;
 
-import com.fplstats.adapter.AdapterUtility;
-import com.fplstats.common.dto.adapter.FplJsonObject;
 import com.fplstats.common.dto.fplstats.Result;
 import com.fplstats.repositories.database.EntityProvider;
 import com.fplstats.repositories.database.FileProvider;
 import com.fplstats.repositories.services.fpl.FplApiProvider;
 import com.fplstats.repositories.services.understat.UnderstatsProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
