@@ -1,8 +1,10 @@
 package com.fplstats.common.dto.adapter;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Date;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -15,6 +17,9 @@ public class UnderstatGameJsonObject{
     private String away_team;
 
     private boolean isResult;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private Date datetime;
 
     @JsonProperty("h")
     private void unpackHomeTeam(Map<String,Object> h) {
@@ -48,5 +53,13 @@ public class UnderstatGameJsonObject{
 
     public void setResult(boolean result) {
         isResult = result;
+    }
+
+    public Date getDatetime() {
+        return datetime;
+    }
+
+    public void setDatetime(Date datetime) {
+        this.datetime = datetime;
     }
 }

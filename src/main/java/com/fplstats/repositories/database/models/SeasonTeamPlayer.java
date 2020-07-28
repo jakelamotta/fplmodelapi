@@ -18,9 +18,6 @@ public class SeasonTeamPlayer{
     @JoinColumn(name = "player_id")
     private Player player;
 
-    @Column(name = "isactive")
-    private boolean isActive;
-
     public int getId() {
         return Id;
     }
@@ -39,13 +36,5 @@ public class SeasonTeamPlayer{
 
     public void setPlayer(Player player) {
         this.player = player;
-    }
-
-    public boolean isCurrent() {
-        return isActive;
-    }
-
-    public void setCurrent(boolean current) {
-        isActive = current;
     }
 }

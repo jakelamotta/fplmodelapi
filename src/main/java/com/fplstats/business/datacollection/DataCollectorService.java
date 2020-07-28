@@ -28,7 +28,7 @@ public class DataCollectorService {
 
 
         if (result.Success){
-            return "Successfull fetch!";
+            return "Success";
         }
 
         return result.ErrorMessage;
@@ -62,7 +62,7 @@ public class DataCollectorService {
             }
         }
 
-        return "Successfull fetch";
+        return "Success";
     }
 
     public String collectUnderstatBaseData(String leagueName, int startYear) throws IOException, InterruptedException {
@@ -87,7 +87,7 @@ public class DataCollectorService {
         }
 
         if (result.Success){
-            return "Succssfull fetch";
+            return "Success";
         }
 
         return "Error in data-collection";

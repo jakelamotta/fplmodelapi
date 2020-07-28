@@ -1,5 +1,8 @@
 package com.fplstats.common.dto.fplstats;
 
+import com.fplstats.repositories.database.models.Player;
+import com.fplstats.repositories.database.models.UnderstatPlayer;
+
 public class SeasonTeamPlayerDto{
 
     private int Id;

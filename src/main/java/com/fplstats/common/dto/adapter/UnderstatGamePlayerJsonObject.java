@@ -11,6 +11,7 @@ public class UnderstatGamePlayerJsonObject{
     private int shots;
     private double xG;
     private int time;
+    private int team_id;
     private int player_id;
     private int yellow_card;
     private int red_card;
@@ -159,5 +160,13 @@ public class UnderstatGamePlayerJsonObject{
 
     public void setGameId(int gameId) {
         this.gameId = gameId;
+    }
+
+    public int getTeam_id() {
+        return team_id;
+    }
+
+    public void setTeam_id(int team_id) {
+        this.team_id = team_id;
     }
 }

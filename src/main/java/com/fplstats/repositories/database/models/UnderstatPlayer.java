@@ -2,7 +2,6 @@ package com.fplstats.repositories.database.models;
 
 import javax.persistence.*;
 
-
 @Entity
 @Table(name="understatPlayer")
 public class UnderstatPlayer{
@@ -10,9 +9,6 @@ public class UnderstatPlayer{
     @javax.persistence.Id
     @Column(name = "understatid")
     private int understatId;
-
-    @Column(name = "seasonid")
-    private int seasonId;
 
     @Column(name = "player_name")
     private String playerName;
@@ -42,13 +38,5 @@ public class UnderstatPlayer{
 
     public void setTeamTitle(String teamTitle) {
         this.teamTitle = teamTitle;
-    }
-
-    public int getSeasonId() {
-        return seasonId;
-    }
-
-    public void setSeasonId(int seasonId) {
-        this.seasonId = seasonId;
     }
 }

@@ -58,6 +58,9 @@ public class UnderstatGamePlayer{
     @Column(name = "xGBuildup")
     private double xGBuildup;
 
+    @Column(name = "seasonId")
+    private int seasonId;
+
     public int getUnderstatGameId() {
         return understatGameId;
     }
@@ -185,5 +188,13 @@ public class UnderstatGamePlayer{
 
     public void setUnderstatId(int understatId) {
         this.understatId = understatId;
+    }
+
+    public int getSeasonId() {
+        return seasonId;
+    }
+
+    public void setSeasonId(int seasonId) {
+        this.seasonId = seasonId;
     }
 }

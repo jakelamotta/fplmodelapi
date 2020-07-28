@@ -32,7 +32,7 @@ public class FplStatsController {
         return "Greetings from Spring Boot!";
     }
 
-    @RequestMapping("/Adapter/FPL")
+    @RequestMapping("/Adapter/Adapt/FPL/Player")
     public String AdaptFplData()
     {
         String result = "Fel";
@@ -50,8 +50,26 @@ public class FplStatsController {
         return result;
     }
 
-    @RequestMapping("/Adapter/Understat/Player")
-    public String AdaptUnderstatPlayerData()
+    @RequestMapping("/Adapter/Adapt/Understat/Game")
+    public String ApdatUnderstatGame(){
+
+        String result = "Fel";
+
+        try
+        {
+            result = matcherService.matchGames();
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
+    @RequestMapping("/Adapter/Match/Understat/Player")
+    public String MatchUnderstatPlayerData()
     {
         String result = "Fel";
 
@@ -68,15 +86,14 @@ public class FplStatsController {
         return result;
     }
 
-
-
-    @RequestMapping("/ImportUnderstatGamePlayers")
-    public String ImportUnderstatGamePlayers(){
+    @RequestMapping("/Adapter/Adapt/Understat/Player")
+    public String AdaptUnderstatPlayerData()
+    {
         String result = "Fel";
 
         try
         {
-            result = importerService.importUnderstatGamePlayers("EPL", 2019);
+            result = matcherService.adaptUnderstatPlayers();
         }
         catch (Exception e)
         {
@@ -87,13 +104,15 @@ public class FplStatsController {
         return result;
     }
 
-    @RequestMapping("/ImportUnderstatGames")
-    public String ImportUnderstatGames(){
+
+    @RequestMapping("/Import/Understat/GamePlayer")
+    public String ImportUnderstatGamePlayers(@RequestParam(name = "league") String league,
+                                             @RequestParam(name = "year") int year){
         String result = "Fel";
 
         try
         {
-            result = importerService.importUnderstatGames("EPL", 2019);
+            result = importerService.importUnderstatGamePlayers(league, year);
         }
         catch (Exception e)
         {
@@ -104,13 +123,14 @@ public class FplStatsController {
         return result;
     }
 
-    @RequestMapping("/ImportUnderstatPlayers")
-    public String importUnderstatPlayers(){
+    @RequestMapping("/Import/Understat/Game")
+    public String ImportUnderstatGames(@RequestParam(name = "league") String league,
+                                       @RequestParam(name = "year") int year){
         String result = "Fel";
 
         try
         {
-            result = importerService.importUnderstatPlayers("EPL", 2019);
+            result = importerService.importUnderstatGames(league,year);
         }
         catch (Exception e)
         {
@@ -121,7 +141,43 @@ public class FplStatsController {
         return result;
     }
 
-    @RequestMapping("/ImportFplData")
+    @RequestMapping("/Import/Understat/Team")
+    public String importUnderstatTeams(@RequestParam(name = "league") String league,
+                                         @RequestParam(name = "year") int year){
+        String result = "Fel";
+
+        try
+        {
+            result = importerService.importUnderstatTeams(league,year);
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
+    @RequestMapping("/Import/Understat/Player")
+    public String importUnderstatPlayers(@RequestParam(name = "league") String league,
+                                         @RequestParam(name = "year") int year){
+        String result = "Fel";
+
+        try
+        {
+            result = importerService.importUnderstatPlayers(league,year);
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
+    @RequestMapping("/Import/Fpl/Player")
     public String ImportFplData() {
 
         String result = "Fel";
@@ -139,7 +195,7 @@ public class FplStatsController {
         return result;
     }
 
-    @RequestMapping("/CollectFplData")
+    @RequestMapping("/Collect/Fpl")
     public String CollectFplData() {
 
         String result = "Fel";
@@ -159,9 +215,30 @@ public class FplStatsController {
 
     }
 
-    @RequestMapping("/CollectUnderstatNestedData")
-    public String CollectNestedData(@RequestParam(name = "league") String league,
+    @RequestMapping("/Collect/Understat/Base")
+    public String CollectBaseData(@RequestParam(name = "league") String league,
                                   @RequestParam(name = "year") int year) {
+
+        String result = "Fel";
+
+        try
+        {
+            result = dataCollectorService.collectUnderstatBaseData(league, year);
+        }
+        catch (Exception e)
+        {
+            System.out.println("IOException");
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+
+    }
+
+    @RequestMapping("/Collect/Understat/Nested")
+    public String CollectNestedData(@RequestParam(name = "league") String league,
+                                    @RequestParam(name = "year") int year) {
 
         String result = "Fel";
 
@@ -177,32 +254,42 @@ public class FplStatsController {
         }
 
         return result;
-
     }
 
-
-    @RequestMapping("/CollectUnderstatBaseData")
-    public String CollectBaseData(@RequestParam(name = "league") String league,
-                                           @RequestParam(name = "year") int year){
+    @RequestMapping("/GetCompleteUnderstatSeason")
+    public String getCompleteUnderstatSeason(@RequestParam(name = "league") String league,
+                                    @RequestParam(name = "year") int year) {
 
         String result = "Fel";
 
         try
         {
-            result = dataCollectorService.collectUnderstatBaseData(league, year);
+            result = dataCollectorService.collectUnderstatBaseData(league,year);
+
+            if (result.equals("Success")){
+                result = importerService.importUnderstatPlayers(league,year);
+
+                if (result.equals("Success")){
+                    result = importerService.importUnderstatGames(league,year);
+
+                    if (result.equals("Success")){
+                        result = dataCollectorService.collectUnderstatNestedData(league, year);
+
+                        if (result.equals("Success")){
+                            result = importerService.importUnderstatGamePlayers(league, year);
+                        }
+                    }
+                }
+            }
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
-        catch (Exception e){
-            System.out.println("InterruptedException");
-            System.out.println(e.getMessage());
-            result = e.getMessage();
-        }
 
         return result;
+
     }
 }

@@ -30,6 +30,9 @@ public class Game{
     @Column(name = "hasbeenplayed")
     private boolean HasBeenPlayed;
 
+    @Column(name = "understatid")
+    private int understatId;
+
     public int getId() {
         return Id;
     }
@@ -64,5 +67,13 @@ public class Game{
 
     public void setSeason(Season season) {
         this.season = season;
+    }
+
+    public int getUnderstatId() {
+        return understatId;
+    }
+
+    public void setUnderstatId(int understatId) {
+        this.understatId = understatId;
     }
 }

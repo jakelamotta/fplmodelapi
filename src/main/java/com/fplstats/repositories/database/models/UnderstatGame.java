@@ -24,6 +24,7 @@ public class UnderstatGame{
     private String awayTeamName;
 
     @Column(name = "datetime")
+    @Temporal(TemporalType.DATE)
     private Date datetime;
 
     public int getUnderstatId() {

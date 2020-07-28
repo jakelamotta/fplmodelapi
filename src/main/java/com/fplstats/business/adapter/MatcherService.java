@@ -1,14 +1,12 @@
 package com.fplstats.business.adapter;
 
-import com.fplstats.common.dto.fplstats.PlayerDto;
-import com.fplstats.common.dto.fplstats.Result;
-import com.fplstats.common.dto.fplstats.SeasonTeamPlayerDto;
-import com.fplstats.common.dto.fplstats.UnderstatPlayerDto;
+import com.fplstats.common.dto.fplstats.*;
 import com.fplstats.repositories.database.EntityProvider;
-import com.fplstats.repositories.database.models.Player;
-import com.fplstats.repositories.database.models.SeasonTeamPlayer;
-import com.fplstats.repositories.database.models.UnderstatGamePlayer;
+import com.fplstats.repositories.database.models.*;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,6 +18,23 @@ public class MatcherService {
         entityProvider = new EntityProvider();
     }
 
+    public String matchGames(){
+
+        Result<String> result = updateGames();
+
+        if (!result.Success){
+            return "Fail - could not update games";
+        }
+
+        //result = updateGameStatistics();
+
+        if (!result.Success){
+            return "Fail - could not update gamestatistics";
+        }
+
+        return "Success";
+    }
+
     public String matchFplData(){
 
         Result<List<PlayerDto>> result = entityProvider.getAllFplPlayers();
@@ -29,14 +44,6 @@ public class MatcherService {
         }
 
         List<PlayerDto> newFplPlayers = result.Data;
-
-        //result = entityProvider.getAllPlayersInSystem();
-
-        //if (!result.Success){
-        //    return "Fail - could not fetch players in system";
-        //}
-
-        //List<PlayerDto> existingPlayers = result.Data;
 
         result = entityProvider.savePlayers(newFplPlayers);
 
@@ -80,6 +87,56 @@ public class MatcherService {
         return "Success";
     }
 
+    public String adaptUnderstatPlayers() {
+
+        Result<List<MatchUnderstatPlayerDto>> result = entityProvider.getAllMatchedUnderstatPlayers();
+
+        if (!result.Success){
+            return "Fail - could not find matched understatplayers";
+        }
+
+        Iterator it = result.Data.iterator();
+        MatchUnderstatPlayerDto matchUnderstatPlayerDto;
+        SeasonTeamPlayerDto stp;
+        List<String> teamNames;
+
+        while (it.hasNext()){
+
+            matchUnderstatPlayerDto = (MatchUnderstatPlayerDto) it.next();
+
+            teamNames = extractTeams(matchUnderstatPlayerDto);
+
+            Iterator teamNameIt = teamNames.iterator();
+
+            while (teamNameIt.hasNext()){
+
+                Iterator seasonIterator = entityProvider.getSeasonsForUnderstatPlayer(matchUnderstatPlayerDto.getUnderstatPlayerDto().getId()).iterator();
+                String teamName = (String) teamNameIt.next();
+
+                while (seasonIterator.hasNext()){
+
+                    int seasonId = (int) seasonIterator.next();
+
+                    stp = new SeasonTeamPlayerDto();
+                    stp.setPlayer(matchUnderstatPlayerDto.getPlayerDto());
+                    stp.setSeasonTeam(new SeasonTeamDto());
+                    stp.getSeasonTeam().setTeam(new TeamDto());
+                    stp.getSeasonTeam().getTeam().setName(teamName);
+                    stp.getSeasonTeam().setSeason(new SeasonDto());
+                    stp.getSeasonTeam().getSeason().setId(seasonId);
+
+                    entityProvider.savePlayer(stp);
+
+                }
+
+            }
+
+
+        }
+
+        return "Success";
+    }
+
     private Result<PlayerDto> matchStpToSystem(UnderstatPlayerDto upDto, List<PlayerDto> systemPlayers) {
 
         Iterator it = systemPlayers.iterator();
@@ -100,5 +157,68 @@ public class MatcherService {
         }
 
         return result;
+    }
+
+    private List<String> extractTeams(MatchUnderstatPlayerDto matchUnderstatPlayerDto) {
+
+        String teamName = matchUnderstatPlayerDto.getUnderstatPlayerDto().getTeamTitle();
+        List<String> teamNames = new ArrayList<>();
+
+        if (teamName.contains(",")){
+
+            String[] teamNameList = teamName.split(",");
+            return Arrays.asList(teamNameList);
+        }
+
+        teamNames.add(teamName);
+        return teamNames;
+    }
+
+    private Result<String> updateGames() {
+
+        Result<String> result = new Result<>();
+        result.Success = true;
+
+        Result<List<GameDto>> understatGameResult = entityProvider.getAllUnderstatGames();
+
+        if (!understatGameResult.Success){
+            result.Success = false;
+            result.ErrorMessage = "Could not fetch understat games";
+            return result;
+        }
+
+
+        result = entityProvider.saveGames(understatGameResult.Data);
+
+        return result;
+    }
+
+    private Result<String> updateGameStatistics() {
+
+        Result<String> result = new Result<>();
+        result.Success = true;
+
+        List<GameDto> gameIds = entityProvider.getAllGamesInSystem();
+        Iterator it = gameIds.iterator();
+
+        while (it.hasNext()){
+            GameDto gameDto = (GameDto) it.next();
+
+            Result<List<GameStatsDto>> understatGameStatsResult = entityProvider.getAllUnderstatGameStats(gameDto);
+
+            if (!understatGameStatsResult.Success){
+                result.Success = false;
+                result.ErrorMessage = "Could not fetch understat games";
+                return result;
+            }
+
+            result = entityProvider.saveGameStats(understatGameStatsResult.Data);
+        }
+
+
+
+        return result;
+
+
     }
 }

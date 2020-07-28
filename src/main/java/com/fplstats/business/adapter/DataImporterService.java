@@ -4,13 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fplstats.common.dto.adapter.FplJsonObject;
-import com.fplstats.common.dto.adapter.UnderstatGameJsonObject;
-import com.fplstats.common.dto.adapter.UnderstatGamePlayerJsonObject;
-import com.fplstats.common.dto.adapter.UnderstatPlayerJsonObject;
+import com.fplstats.common.dto.adapter.*;
 import com.fplstats.common.dto.fplstats.Result;
 import com.fplstats.repositories.database.EntityProvider;
 import com.fplstats.repositories.database.FileProvider;
+import com.fplstats.repositories.database.models.UnderstatTeam;
 
 import javax.persistence.EntityManager;
 import java.io.IOException;
@@ -60,7 +58,28 @@ public class DataImporterService {
         }
 
         if (result.Success){
-            return "Successfull import!";
+            return "Success";
+        }
+
+        return result.ErrorMessage;
+    }
+
+    public String importUnderstatTeams(String leagueName, int year) throws IOException {
+        EntityProvider provider = new EntityProvider();
+
+        String filename = "Understat\\" + leagueName + "\\" + year + "\\" + "teams.txt";
+
+        Result<String> result = FileProvider.ReadFileContent(filename);
+        List<UnderstatTeamJsonObject> understatTeamJsonObjectList;
+
+        if (result.Success){
+            ObjectMapper objectMapper = new ObjectMapper();
+            understatTeamJsonObjectList = objectMapper.readValue(result.Data, new TypeReference<List<UnderstatTeamJsonObject>>(){});
+            provider.saveUnderstatTeams(leagueName, year, understatTeamJsonObjectList);
+        }
+
+        if (result.Success){
+            return "Success";
         }
 
         return result.ErrorMessage;
@@ -81,7 +100,7 @@ public class DataImporterService {
         }
 
         if (result.Success){
-            return "Successfull import!";
+            return "Success";
         }
 
         return result.ErrorMessage;
@@ -137,7 +156,6 @@ public class DataImporterService {
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }
-
                     });
 
             result = provider.saveUnderstatGamePlayers(leagueName, year, understatGamePlayerJsonObjectList, gameId);
@@ -147,6 +165,6 @@ public class DataImporterService {
             }
         }
 
-        return "Successfull delete";
+        return "Success";
     }
 }
