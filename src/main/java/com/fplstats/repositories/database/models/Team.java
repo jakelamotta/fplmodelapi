@@ -19,7 +19,7 @@ public class Team{
     private String name;
 
     @Column(name = "understatid")
-    private String understatid;
+    private int understatid;
 
     public String getName() {
         return name;
@@ -29,11 +29,11 @@ public class Team{
         this.name = name;
     }
 
-    public String getUnderstatid() {
+    public int getUnderstatid() {
         return understatid;
     }
 
-    public void setUnderstatid(String understatid) {
+    public void setUnderstatid(int understatid) {
         this.understatid = understatid;
     }
 }

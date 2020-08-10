@@ -1,6 +1,9 @@
 package com.fplstats.business.adapter;
 
 import com.fplstats.common.dto.fplstats.*;
+import com.fplstats.common.exception.NonExistingGameException;
+import com.fplstats.common.exception.NonExistingSeasonTeamPlayerException;
+import com.fplstats.common.exception.NonExistingTeamException;
 import com.fplstats.repositories.database.EntityProvider;
 import com.fplstats.repositories.database.models.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -18,7 +21,7 @@ public class MatcherService {
         entityProvider = new EntityProvider();
     }
 
-    public String matchGames(){
+    public String matchGames() throws NonExistingTeamException, NonExistingSeasonTeamPlayerException, NonExistingGameException {
 
         Result<String> result = updateGames();
 
@@ -26,7 +29,7 @@ public class MatcherService {
             return "Fail - could not update games";
         }
 
-        //result = updateGameStatistics();
+        result = updateGameStatistics();
 
         if (!result.Success){
             return "Fail - could not update gamestatistics";
@@ -193,7 +196,7 @@ public class MatcherService {
         return result;
     }
 
-    private Result<String> updateGameStatistics() {
+    private Result<String> updateGameStatistics() throws NonExistingTeamException, NonExistingSeasonTeamPlayerException, NonExistingGameException {
 
         Result<String> result = new Result<>();
         result.Success = true;
@@ -220,5 +223,34 @@ public class MatcherService {
         return result;
 
 
+    }
+
+    public String matchTeams() {
+
+        Result<String> result = updateTeams();
+
+        if (!result.Success){
+            return "Fail - could not update teams";
+        }
+
+        return "Success";
+    }
+
+    private Result<String> updateTeams() {
+
+        Result<String> result = new Result<>();
+        result.Success = true;
+
+        Result<List<SeasonTeamDto>> understatGameResult = entityProvider.getAllUnderstatTeams();
+
+        if (!understatGameResult.Success){
+            result.Success = false;
+            result.ErrorMessage = "Could not fetch understat games";
+            return result;
+        }
+
+        result = entityProvider.saveTeams(understatGameResult.Data);
+
+        return result;
     }
 }

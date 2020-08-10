@@ -1,6 +1,10 @@
 use fpldata_dev;
 
 select count(*)-1
+from Player where name = 'Mohamed Salah'
+and understatid = 1250;
+
+select count(*)-1
 from Player where name = 'Pierre-Emerick Aubameyang';
 
 select count(*)-3

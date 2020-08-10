@@ -50,6 +50,24 @@ public class FplStatsController {
         return result;
     }
 
+    @RequestMapping("/Adapter/Adapt/Understat/Team")
+    public String ApdatUnderstatTeam(){
+
+        String result = "Fel";
+
+        try
+        {
+            result = matcherService.matchTeams();
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
     @RequestMapping("/Adapter/Adapt/Understat/Game")
     public String ApdatUnderstatGame(){
 
@@ -245,6 +263,54 @@ public class FplStatsController {
         try
         {
             result = dataCollectorService.collectUnderstatNestedData(league, year);
+        }
+        catch (Exception e)
+        {
+            System.out.println("IOException");
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
+    @RequestMapping("/Adapter/Match/All")
+    public String MatchAll(){
+        String result = "Fel";
+
+        try
+        {
+            result = matcherService.matchUnderstatPlayer();
+        }
+        catch (Exception e)
+        {
+            System.out.println("IOException");
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
+    @RequestMapping("/Adapter/Adapt/All")
+    public String AdaptAll(){
+        String result = "Fel";
+
+        try
+        {
+            result = matcherService.matchFplData();
+
+            if (result != "Success"){
+                return  result;
+            }
+
+            result = matcherService.adaptUnderstatPlayers();
+
+            if (result != "Success"){
+                return  result;
+            }
+
+            result = matcherService.matchGames();matcherService.matchTeams();
         }
         catch (Exception e)
         {

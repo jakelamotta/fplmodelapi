@@ -2,6 +2,9 @@ package com.fplstats.repositories.database;
 
 import com.fplstats.common.dto.adapter.*;
 import com.fplstats.common.dto.fplstats.*;
+import com.fplstats.common.exception.NonExistingGameException;
+import com.fplstats.common.exception.NonExistingSeasonTeamPlayerException;
+import com.fplstats.common.exception.NonExistingTeamException;
 import com.fplstats.repositories.database.models.*;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -295,6 +298,10 @@ public class EntityProvider {
             playerDto.setCost(player.getNowCost());
             playerDto.setName(player.getFirstName(), player.getSecondName());
 
+            PositionDto positionDto = new PositionDto();
+            positionDto.setId(player.getElementType());
+            playerDto.setPosition(positionDto);
+
             result.Data.add(playerDto);
         }
 
@@ -319,8 +326,11 @@ public class EntityProvider {
         Iterator it = newFplPlayers.iterator();
         PlayerDto next;
         Player player;
+        boolean costChange = false;
 
         manager.getTransaction().begin();
+
+        List<Position> positions = getPositions();
 
         while (it.hasNext()){
 
@@ -338,8 +348,11 @@ public class EntityProvider {
 
             if (player != null){
 
+                costChange = player.getCost() != next.getCost();
+
                 if (player.getFplId() == next.getFplId() &&
-                    player.getCost() == next.getCost()){
+                    !costChange &&
+                    player.getPosition().getId() == next.getPosition().getId()){
                     continue;
                 }
             }
@@ -347,16 +360,20 @@ public class EntityProvider {
                 player = new Player();
                 player.setName(next.getName());
             }
+
+            player.setPosition(getPositionById(positions, next.getPosition().getId()));
             player.setCost(next.getCost());
             player.setFplId(next.getFplId());
 
             manager.persist(player);
 
-            CostHistory costHistory = new CostHistory();
-            costHistory.setDate(Date.from(Instant.now()));
-            costHistory.setPlayer(player);
-            costHistory.setNewCost(player.getCost());
-            manager.persist(costHistory);
+            if (costChange){
+                CostHistory costHistory = new CostHistory();
+                costHistory.setDate(Date.from(Instant.now()));
+                costHistory.setPlayer(player);
+                costHistory.setNewCost(player.getCost());
+                manager.persist(costHistory);
+            }
         }
 
         manager.getTransaction().commit();
@@ -366,6 +383,35 @@ public class EntityProvider {
         }
 
         return result;
+    }
+
+    private Position getPositionById(List<Position> positions, int id) {
+
+        Iterator it = positions.iterator();
+        Position position;
+
+        while (it.hasNext()){
+
+            position = (Position) it.next();
+
+            if (position.getId() == id){
+                return position;
+            }
+        }
+
+        throw new NullPointerException("Position can't be null");
+    }
+
+    private List<Position> getPositions() {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+
+        List<Position> positions  =
+                manager.createQuery("from Position"
+                ).getResultList();
+
+        return positions;
     }
 
     public Result<List<PlayerDto>> getAllPlayersInSystem() {
@@ -533,14 +579,17 @@ public class EntityProvider {
             team = null;
         }
 
+        manager.getTransaction().begin();
+
         if (team == null){
             team = new Team();
             team.setName(teamDto.getName());
-
-            manager.getTransaction().begin();
-            manager.persist(team);
-            manager.getTransaction().commit();
         }
+
+        team.setUnderstatid(teamDto.getUnderstatId());
+
+        manager.persist(team);
+        manager.getTransaction().commit();
 
         teamDto.setId(team.getId());
 
@@ -808,9 +857,9 @@ public class EntityProvider {
 
             if (team == null){
                 team = new UnderstatTeam();
-                team.setUnderstatId(next.getId());
             }
 
+            team.setUnderstatId(next.getId());
             team.setName(next.getTitle());
             team.setSeasonId(seasonId);
 
@@ -826,7 +875,7 @@ public class EntityProvider {
 
     }
 
-    public Result<List<GameStatsDto>> getAllUnderstatGameStats(GameDto gameDto) {
+    public Result<List<GameStatsDto>> getAllUnderstatGameStats(GameDto gameDto) throws NonExistingTeamException, NonExistingGameException {
 
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
@@ -847,12 +896,23 @@ public class EntityProvider {
         while (it.hasNext()){
 
             understatGamePlayer = (UnderstatGamePlayer) it.next();
+            int playerId = getPlayerIdFromUnderstatid(understatGamePlayer.getUnderstatPlayerId());
+            TeamDto teamDto = getTeamFromUnderstatid(understatGamePlayer.getUnderstatTeamId());
+
+            if (playerId == 0){
+                continue;
+            }
+
+            if (teamDto == null){
+                throw new NonExistingTeamException("Could not find team with id " + teamDto.getUnderstatId());
+            }
 
             gameStatsDto = new GameStatsDto();
 
             gameStatsDto.setAssists(understatGamePlayer.getAssists());
             gameStatsDto.setGame(new GameDto());
             gameStatsDto.getGame().setUnderstatid(understatGamePlayer.getUnderstatGameId());
+            gameStatsDto.getGame().setId(getGameByUnderstatId(understatGamePlayer.getUnderstatGameId()).getId());
 
             gameStatsDto.setGoals(understatGamePlayer.getGoals());
             gameStatsDto.setMinutesPlayed(understatGamePlayer.getTime());
@@ -861,11 +921,15 @@ public class EntityProvider {
 
             gameStatsDto.setSeasonTeamPlayer(new SeasonTeamPlayerDto());
             gameStatsDto.getSeasonTeamPlayer().setPlayer(new PlayerDto());
-            gameStatsDto.getSeasonTeamPlayer().getPlayer().setId(getPlayerIdFromUnderstatid(understatGamePlayer.getUnderstatPlayerId()));
+            gameStatsDto.getSeasonTeamPlayer().getPlayer().setId(playerId);
 
             gameStatsDto.getSeasonTeamPlayer().setSeasonTeam(new SeasonTeamDto());
             gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().setTeam(new TeamDto());
-            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setName(getTeamFromUnderstatid(understatGamePlayer.getUnderstatTeamId()).getName());
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setName(teamDto.getName());
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setId(teamDto.getId());
+
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().setSeason(new SeasonDto());
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getSeason().setId(understatGamePlayer.getSeasonId());
 
             gameStatsDto.setxA(understatGamePlayer.getxA());
             gameStatsDto.setxG(understatGamePlayer.getxG());
@@ -890,9 +954,16 @@ public class EntityProvider {
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
 
-        Team team = (Team) manager.createQuery("from Team where understatid = ?1")
-                .setParameter(1, understatTeamId)
-                .getSingleResult();
+        Team team;
+
+        try{
+            team = (Team) manager.createQuery("from Team where understatid = ?1")
+                    .setParameter(1, understatTeamId)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            return null;
+        }
 
         TeamDto teamDto = new TeamDto();
 
@@ -905,14 +976,178 @@ public class EntityProvider {
     private int getPlayerIdFromUnderstatid(int understatPlayerId) {
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
+        MatchUnderstatPlayer player;
 
-        return (int) manager.createQuery("select M.player_id from MatchUnderstatPlayer as M where understatplayer_understatid = ?1")
-                .setParameter(1, understatPlayerId)
-                .getSingleResult();
+        try{
+            player =  (MatchUnderstatPlayer) manager.createQuery("from MatchUnderstatPlayer as M where understatplayer_understatid = ?1")
+                    .setParameter(1, understatPlayerId)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            player = null;
+        }
+
+        if (player == null){
+            return 0;
+        }
+
+        return player.getPlayer().getId();
     }
 
-    public Result<String> saveGameStats(List<GameStatsDto> data) {
-        throw new NotImplementedException();
+    public Result<String> saveGameStats(List<GameStatsDto> data) throws NonExistingSeasonTeamPlayerException, NonExistingGameException, NonExistingTeamException {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+
+        Iterator it = data.iterator();
+        GameStatsDto gameStatsDto;
+        GameStats gameStats;
+
+        Result<String> result = new Result<>();
+        result.Success = true;
+        manager.getTransaction().begin();
+
+        while (it.hasNext()){
+
+            gameStatsDto = (GameStatsDto) it.next();
+
+            SeasonTeamPlayer stp = getSeasonTeamPlayerByParams(gameStatsDto.getSeasonTeamPlayer().getPlayer().getId(),
+                    gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getSeason().getId(),
+                    gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().getId());
+
+            //TODO: Kolla om stats finns
+            try{
+                gameStats =  (GameStats) manager.createQuery("from GameStats as Gs where game.id = ?1 AND seasonTeamPlayer.id = ?2")
+                        .setParameter(1, gameStatsDto.getGame().getId())
+                        .setParameter(2, stp.getId())
+                        .getSingleResult();
+            }
+            catch (NoResultException e){
+                gameStats = null;
+            }
+
+            if (gameStats == null){
+                gameStats = new GameStats();
+                gameStats.setSeasonTeamPlayer(stp);
+                gameStats.setGame(getGameById(gameStatsDto.getGame().getId()));
+            }
+
+            gameStats.setAssists(gameStatsDto.getAssists());
+            gameStats.setGoals(gameStatsDto.getGoals());
+            gameStats.setMinutesPlayed(gameStatsDto.getMinutesPlayed());
+            gameStats.setRedCards(gameStatsDto.getRedCards());
+            gameStats.setSaves(gameStatsDto.getSaves());
+            gameStats.setShots(gameStatsDto.getShots());
+            gameStats.setxA(gameStatsDto.getxA());
+            gameStats.setxG(gameStatsDto.getxG());
+            gameStats.setxGBuildup(gameStatsDto.getxGBuildup());
+            gameStats.setxGChain(gameStatsDto.getxGChain());
+            gameStats.setYellowCards(gameStatsDto.getYellowCards());
+            manager.persist(gameStats);
+        }
+
+        manager.getTransaction().commit();
+
+        return result;
+    }
+
+    private Game getGameById(int id) throws NonExistingGameException {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+        Game game;
+
+        try{
+            game =  (Game) manager.createQuery("from Game as G where id = ?1")
+                    .setParameter(1, id)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            throw new NonExistingGameException("Could not find game with id " + id);
+        }
+
+        return game;
+
+    }
+
+    private Game getGameByUnderstatId(int understatId) throws NonExistingGameException {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+        Game game;
+
+        try{
+            game =  (Game) manager.createQuery("from Game as G where understatId = ?1")
+                    .setParameter(1, understatId)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            throw new NonExistingGameException("Could not find game with understatid " + understatId);
+        }
+
+        return game;
+
+    }
+
+    private SeasonTeamPlayer getSeasonTeamPlayerByParams(int playerId, int seasonId, int teamId) throws NonExistingTeamException {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+        SeasonTeamPlayer seasonTeamPlayer;
+
+        try{
+            seasonTeamPlayer =  (SeasonTeamPlayer) manager.createQuery("from SeasonTeamPlayer as stp where player.id = ?1 AND seasonTeam.team.id = ?2 AND seasonTeam.season.id = ?3")
+                    .setParameter(1, playerId)
+                    .setParameter(2, teamId)
+                    .setParameter(3, seasonId)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            seasonTeamPlayer = null;
+        }
+
+        if (seasonTeamPlayer == null){
+            seasonTeamPlayer = saveSeasonTeamPlayer(playerId, teamId, seasonId);
+        }
+
+        return seasonTeamPlayer;
+
+    }
+
+    private SeasonTeamPlayer saveSeasonTeamPlayer(int playerId, int teamId, int seasonId) throws NonExistingTeamException {
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+
+        manager.getTransaction().begin();
+
+        SeasonTeamPlayer seasonTeamPlayer = new SeasonTeamPlayer();
+
+        Player player = manager.find(Player.class, playerId);
+
+        seasonTeamPlayer.setPlayer(player);
+
+        SeasonTeam seasonTeam;
+
+        try{
+            seasonTeam = (SeasonTeam) manager.createQuery("from SeasonTeam as stp where team.id = ?1 AND season.id = ?2")
+                    .setParameter(1, teamId)
+                    .setParameter(2, seasonId)
+                    .getSingleResult();
+        }
+        catch (NoResultException e){
+            seasonTeam = null;
+        }
+
+        if (seasonTeam == null){
+            throw new NonExistingTeamException("Seasonteam doesnt exist. Teamid: " +teamId + " seasonId: " + seasonId);
+        }
+
+        seasonTeamPlayer.setSeasonTeam(seasonTeam);
+        manager.persist(seasonTeamPlayer);
+
+        manager.getTransaction().commit();
+
+        return seasonTeamPlayer;
     }
 
     public List<GameDto> getAllGamesInSystem() {
@@ -951,5 +1186,96 @@ public class EntityProvider {
         }
 
         return  gameDtos;
+    }
+
+    public Result<List<SeasonTeamDto>> getAllUnderstatTeams() {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+
+        Result<List<SeasonTeamDto>> result = new Result<>();
+
+        List<UnderstatTeam> understatTeams  =
+                manager.createQuery("from UnderstatTeam"
+                ).getResultList();
+
+        Iterator it = understatTeams.iterator();
+        UnderstatTeam team;
+        result.Data = new ArrayList<>();
+
+        while (it.hasNext()){
+
+            team = (UnderstatTeam) it.next();
+
+            SeasonTeamDto seasonTeamDto = new SeasonTeamDto();
+            TeamDto teamDto = new TeamDto();
+            teamDto.setName(team.getName());
+            teamDto.setUnderstatId(team.getUnderstatId());
+
+            seasonTeamDto.setTeam(teamDto);
+
+            SeasonDto seasonDto = new SeasonDto();
+            seasonDto.setId(team.getSeasonId());
+            seasonTeamDto.setSeason(seasonDto);
+
+            result.Data.add(seasonTeamDto);
+        }
+
+        result.Success = result.Data.size() > 0;
+
+        if (manager.getTransaction().isActive()){
+            manager.getTransaction().commit();
+        }
+
+        return result;
+
+    }
+
+    public Result<String> saveTeams(List<SeasonTeamDto> seasonTeamDtos) {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+        Result<String> result = new Result<>();
+        result.Success = true;
+
+        Iterator it = seasonTeamDtos.iterator();
+        SeasonTeamDto seasonTeamDto;
+
+        while (it.hasNext()){
+
+            seasonTeamDto = (SeasonTeamDto) it.next();
+
+            TeamDto teamDto = saveTeam(seasonTeamDto.getTeam());
+
+            SeasonTeam seasonTeam;
+
+            try{
+                seasonTeam = (SeasonTeam) manager
+                        .createQuery("from SeasonTeam As S where season.Id = ?1 AND team.id = ?2")
+                        .setParameter(1, seasonTeamDto.getSeason().getId())
+                        .setParameter(2, seasonTeamDto.getTeam().getId())
+                        .getSingleResult();
+            }
+            catch (NoResultException ex){
+                seasonTeam = null;
+            }
+
+            if (seasonTeam == null){
+                manager.getTransaction().begin();
+
+                seasonTeam = new SeasonTeam();
+
+                Season season = manager.find(Season.class, seasonTeamDto.getSeason().getId());
+                Team team = manager.find(Team.class, teamDto.getId());
+
+                seasonTeam.setSeason(season);
+                seasonTeam.setTeam(team);
+                manager.persist(seasonTeam);
+
+                manager.getTransaction().commit();
+            }
+        }
+
+        return result;
     }
 }

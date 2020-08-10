@@ -11,6 +11,8 @@ public class PlayerDto{
 
     private int fplId;
 
+    private PositionDto position;
+
     public int getId() {
         return Id;
     }
@@ -45,5 +47,13 @@ public class PlayerDto{
 
     public void setFplId(int fplId) {
         this.fplId = fplId;
+    }
+
+    public PositionDto getPosition() {
+        return position;
+    }
+
+    public void setPosition(PositionDto position) {
+        this.position = position;
     }
 }

@@ -137,7 +137,6 @@ public class DataImporterService {
             homeNode.fieldNames()
                     .forEachRemaining(f -> {
                         try {
-                            String t = homeNode.get(f).toString();
                             UnderstatGamePlayerJsonObject obj = objectMapper.readValue(homeNode.get(f).toString(), UnderstatGamePlayerJsonObject.class);
                             understatGamePlayerJsonObjectList.add(obj);
                         } catch (Exception e) {
@@ -147,11 +146,11 @@ public class DataImporterService {
                     });
 
             JsonNode awayNode = jsonNode.get("a");
-            homeNode.fieldNames()
+            awayNode.fieldNames()
                     .forEachRemaining(f -> {
                         try {
-                            String t = homeNode.get(f).toString();
-                            UnderstatGamePlayerJsonObject obj = objectMapper.readValue(homeNode.get(f).toString(), UnderstatGamePlayerJsonObject.class);
+
+                            UnderstatGamePlayerJsonObject obj = objectMapper.readValue(awayNode.get(f).toString(), UnderstatGamePlayerJsonObject.class);
                             understatGamePlayerJsonObjectList.add(obj);
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
@@ -159,7 +158,7 @@ public class DataImporterService {
                     });
 
             result = provider.saveUnderstatGamePlayers(leagueName, year, understatGamePlayerJsonObjectList, gameId);
-
+            understatGamePlayerJsonObjectList.clear();
             if (result.Success){
                 FileProvider.DeleteItem(temp);
             }

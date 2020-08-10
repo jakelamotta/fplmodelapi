@@ -21,6 +21,10 @@ public class Player{
     @Column(name = "fplid")
     private int fplId;
 
+    @ManyToOne
+    @JoinColumn(name = "position_id")
+    private Position position;
+
     public double getCost() {
         return cost;
     }
@@ -47,5 +51,13 @@ public class Player{
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Position getPosition() {
+        return position;
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
     }
 }
