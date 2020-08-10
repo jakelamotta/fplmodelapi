@@ -6,21 +6,27 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fplstats.common.dto.adapter.*;
 import com.fplstats.common.dto.fplstats.Result;
-import com.fplstats.repositories.database.EntityProvider;
+import com.fplstats.repositories.database.EntityReader;
+import com.fplstats.repositories.database.EntityWriter;
 import com.fplstats.repositories.database.FileProvider;
-import com.fplstats.repositories.database.models.UnderstatTeam;
 
-import javax.persistence.EntityManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class DataImporterService {
+
+    private EntityWriter entityWriter;
+
+    public DataImporterService(){
+
+        entityWriter = new EntityWriter();
+
+    }
 
     public String importFplData() throws JsonProcessingException {
 
@@ -31,20 +37,16 @@ public class DataImporterService {
         ObjectMapper objectMapper = new ObjectMapper();
         List<FplJsonObject> fplJsonObject = objectMapper.readValue(jsonString, new TypeReference<List<FplJsonObject>>(){});
 
-        EntityProvider provider = new EntityProvider();
-        result = provider.saveFplPlayers(fplJsonObject);
+        result = entityWriter.saveFplPlayers(fplJsonObject);
 
         if (result.Success){
-            return "Successfull import!";
+            return "Success";
         }
 
         return result.ErrorMessage;
     }
 
     public String importUnderstatPlayers(String leagueName, int year) throws IOException {
-
-
-        EntityProvider provider = new EntityProvider();
 
         String filename = "Understat\\" + leagueName + "\\" + year + "\\" + "players.txt";
 
@@ -54,7 +56,7 @@ public class DataImporterService {
         if (result.Success){
             ObjectMapper objectMapper = new ObjectMapper();
             understatPlayerJsonObject = objectMapper.readValue(result.Data, new TypeReference<List<UnderstatPlayerJsonObject>>(){});
-            provider.saveUnderstatPlayers(leagueName, year, understatPlayerJsonObject);
+            entityWriter.saveUnderstatPlayers(leagueName, year, understatPlayerJsonObject);
         }
 
         if (result.Success){
@@ -65,7 +67,6 @@ public class DataImporterService {
     }
 
     public String importUnderstatTeams(String leagueName, int year) throws IOException {
-        EntityProvider provider = new EntityProvider();
 
         String filename = "Understat\\" + leagueName + "\\" + year + "\\" + "teams.txt";
 
@@ -75,7 +76,7 @@ public class DataImporterService {
         if (result.Success){
             ObjectMapper objectMapper = new ObjectMapper();
             understatTeamJsonObjectList = objectMapper.readValue(result.Data, new TypeReference<List<UnderstatTeamJsonObject>>(){});
-            provider.saveUnderstatTeams(leagueName, year, understatTeamJsonObjectList);
+            entityWriter.saveUnderstatTeams(leagueName, year, understatTeamJsonObjectList);
         }
 
         if (result.Success){
@@ -86,7 +87,6 @@ public class DataImporterService {
     }
 
     public String importUnderstatGames(String leagueName, int year) throws IOException {
-        EntityProvider provider = new EntityProvider();
 
         String filename = "Understat\\" + leagueName + "\\" + year + "\\" + "results.txt";
 
@@ -96,7 +96,7 @@ public class DataImporterService {
         if (result.Success){
             ObjectMapper objectMapper = new ObjectMapper();
             understatGameJsonObjectList = objectMapper.readValue(result.Data, new TypeReference<List<UnderstatGameJsonObject>>(){});
-            provider.saveUnderstatGames(leagueName, year, understatGameJsonObjectList);
+            entityWriter.saveUnderstatGames(leagueName, year, understatGameJsonObjectList);
         }
 
         if (result.Success){
@@ -110,8 +110,6 @@ public class DataImporterService {
 
         String basePath = "C:\\Users\\krijoh3\\IdeaProjects\\fplstats\\src\\main\\resources\\data\\";
         String path = basePath + "\\Understat\\" + leagueName + "\\" + year;
-
-        EntityProvider provider = new EntityProvider();
 
         List<String> paths = Files.walk(Paths.get(path)).filter(Files::isDirectory).map(s -> s.toString()).collect(Collectors.toList());
         Iterator it = paths.iterator();
@@ -157,7 +155,7 @@ public class DataImporterService {
                         }
                     });
 
-            result = provider.saveUnderstatGamePlayers(leagueName, year, understatGamePlayerJsonObjectList, gameId);
+            result = entityWriter.saveUnderstatGamePlayers(leagueName, year, understatGamePlayerJsonObjectList, gameId);
             understatGamePlayerJsonObjectList.clear();
             if (result.Success){
                 FileProvider.DeleteItem(temp);

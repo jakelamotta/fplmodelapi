@@ -4,9 +4,8 @@ import com.fplstats.common.dto.fplstats.*;
 import com.fplstats.common.exception.NonExistingGameException;
 import com.fplstats.common.exception.NonExistingSeasonTeamPlayerException;
 import com.fplstats.common.exception.NonExistingTeamException;
-import com.fplstats.repositories.database.EntityProvider;
-import com.fplstats.repositories.database.models.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import com.fplstats.repositories.database.EntityReader;
+import com.fplstats.repositories.database.EntityWriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,10 +14,13 @@ import java.util.List;
 
 public class MatcherService {
 
-    private EntityProvider entityProvider;
+    private EntityWriter entityWriter;
+    private EntityReader entityReader;
 
     public MatcherService(){
-        entityProvider = new EntityProvider();
+
+        entityReader = new EntityReader();
+        entityWriter = new EntityWriter();
     }
 
     public String matchGames() throws NonExistingTeamException, NonExistingSeasonTeamPlayerException, NonExistingGameException {
@@ -40,7 +42,7 @@ public class MatcherService {
 
     public String matchFplData(){
 
-        Result<List<PlayerDto>> result = entityProvider.getAllFplPlayers();
+        Result<List<PlayerDto>> result = entityReader.getAllFplPlayers();
 
         if (!result.Success){
             return "Success - no data to adapt";
@@ -48,7 +50,7 @@ public class MatcherService {
 
         List<PlayerDto> newFplPlayers = result.Data;
 
-        result = entityProvider.savePlayers(newFplPlayers);
+        result = entityWriter.savePlayers(newFplPlayers);
 
         if (!result.Success) {
             return "Fail - could not save players";
@@ -59,7 +61,7 @@ public class MatcherService {
 
     public String matchUnderstatPlayer(){
 
-        Result<List<PlayerDto>> result = entityProvider.getAllPlayersInSystem();
+        Result<List<PlayerDto>> result = entityReader.getAllPlayersInSystem();
 
         if (!result.Success){
             return "Fail - could not get players in system";
@@ -67,7 +69,7 @@ public class MatcherService {
 
         List<PlayerDto> systemPlayers = result.Data;
 
-        Result<List<UnderstatPlayerDto>> understatPlayerResult = entityProvider.getAllUnderstatPlayers();
+        Result<List<UnderstatPlayerDto>> understatPlayerResult = entityReader.getAllUnderstatPlayers();
 
         if (!understatPlayerResult.Success){
             return "Fail - could not get understatplayers";
@@ -83,7 +85,7 @@ public class MatcherService {
             Result<PlayerDto> playerDtoResult = matchStpToSystem(upDto, systemPlayers);
 
             if (playerDtoResult.Success){
-                entityProvider.saveMatch(upDto, playerDtoResult.Data);
+                entityWriter.saveMatch(upDto, playerDtoResult.Data);
             }
         }
 
@@ -92,7 +94,7 @@ public class MatcherService {
 
     public String adaptUnderstatPlayers() {
 
-        Result<List<MatchUnderstatPlayerDto>> result = entityProvider.getAllMatchedUnderstatPlayers();
+        Result<List<MatchUnderstatPlayerDto>> result = entityReader.getAllMatchedUnderstatPlayers();
 
         if (!result.Success){
             return "Fail - could not find matched understatplayers";
@@ -113,7 +115,7 @@ public class MatcherService {
 
             while (teamNameIt.hasNext()){
 
-                Iterator seasonIterator = entityProvider.getSeasonsForUnderstatPlayer(matchUnderstatPlayerDto.getUnderstatPlayerDto().getId()).iterator();
+                Iterator seasonIterator = entityReader.getSeasonsForUnderstatPlayer(matchUnderstatPlayerDto.getUnderstatPlayerDto().getId()).iterator();
                 String teamName = (String) teamNameIt.next();
 
                 while (seasonIterator.hasNext()){
@@ -128,13 +130,24 @@ public class MatcherService {
                     stp.getSeasonTeam().setSeason(new SeasonDto());
                     stp.getSeasonTeam().getSeason().setId(seasonId);
 
-                    entityProvider.savePlayer(stp);
+                    entityWriter.savePlayer(stp);
 
                 }
 
             }
 
 
+        }
+
+        return "Success";
+    }
+
+    public String matchTeams() {
+
+        Result<String> result = updateTeams();
+
+        if (!result.Success){
+            return "Fail - could not update teams";
         }
 
         return "Success";
@@ -182,7 +195,7 @@ public class MatcherService {
         Result<String> result = new Result<>();
         result.Success = true;
 
-        Result<List<GameDto>> understatGameResult = entityProvider.getAllUnderstatGames();
+        Result<List<GameDto>> understatGameResult = entityReader.getAllUnderstatGames();
 
         if (!understatGameResult.Success){
             result.Success = false;
@@ -191,7 +204,7 @@ public class MatcherService {
         }
 
 
-        result = entityProvider.saveGames(understatGameResult.Data);
+        result = entityWriter.saveGames(understatGameResult.Data);
 
         return result;
     }
@@ -201,13 +214,13 @@ public class MatcherService {
         Result<String> result = new Result<>();
         result.Success = true;
 
-        List<GameDto> gameIds = entityProvider.getAllGamesInSystem();
+        List<GameDto> gameIds = entityReader.getAllGamesInSystem();
         Iterator it = gameIds.iterator();
 
         while (it.hasNext()){
             GameDto gameDto = (GameDto) it.next();
 
-            Result<List<GameStatsDto>> understatGameStatsResult = entityProvider.getAllUnderstatGameStats(gameDto);
+            Result<List<GameStatsDto>> understatGameStatsResult = entityReader.getAllUnderstatGameStats(gameDto);
 
             if (!understatGameStatsResult.Success){
                 result.Success = false;
@@ -215,7 +228,7 @@ public class MatcherService {
                 return result;
             }
 
-            result = entityProvider.saveGameStats(understatGameStatsResult.Data);
+            result = entityWriter.saveGameStats(understatGameStatsResult.Data);
         }
 
 
@@ -225,23 +238,12 @@ public class MatcherService {
 
     }
 
-    public String matchTeams() {
-
-        Result<String> result = updateTeams();
-
-        if (!result.Success){
-            return "Fail - could not update teams";
-        }
-
-        return "Success";
-    }
-
     private Result<String> updateTeams() {
 
         Result<String> result = new Result<>();
         result.Success = true;
 
-        Result<List<SeasonTeamDto>> understatGameResult = entityProvider.getAllUnderstatTeams();
+        Result<List<SeasonTeamDto>> understatGameResult = entityReader.getAllUnderstatTeams();
 
         if (!understatGameResult.Success){
             result.Success = false;
@@ -249,7 +251,7 @@ public class MatcherService {
             return result;
         }
 
-        result = entityProvider.saveTeams(understatGameResult.Data);
+        result = entityWriter.saveTeams(understatGameResult.Data);
 
         return result;
     }

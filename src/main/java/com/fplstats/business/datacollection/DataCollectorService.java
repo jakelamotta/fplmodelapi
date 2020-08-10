@@ -1,7 +1,7 @@
 package com.fplstats.business.datacollection;
 
 import com.fplstats.common.dto.fplstats.Result;
-import com.fplstats.repositories.database.EntityProvider;
+import com.fplstats.repositories.database.EntityReader;
 import com.fplstats.repositories.database.FileProvider;
 import com.fplstats.repositories.services.fpl.FplApiProvider;
 import com.fplstats.repositories.services.understat.UnderstatsProvider;
@@ -13,6 +13,12 @@ import java.util.List;
 
 @Configuration
 public class DataCollectorService {
+
+    private EntityReader entityReader;
+
+    public DataCollectorService(){
+        entityReader = new EntityReader();
+    }
 
     public String collectFplData() throws IOException {
 
@@ -36,8 +42,7 @@ public class DataCollectorService {
 
     public String collectUnderstatNestedData(String leagueName, int startYear) throws IOException, InterruptedException {
 
-        EntityProvider entityProvider = new EntityProvider();
-        Result<List<Integer>> result = entityProvider.getGameIds(leagueName,startYear);
+        Result<List<Integer>> result = entityReader.getGameIds(leagueName,startYear);
         Result<String> understatResult;
 
         UnderstatsProvider understatsProvider = new UnderstatsProvider();
