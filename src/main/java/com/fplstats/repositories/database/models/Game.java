@@ -27,11 +27,24 @@ public class Game{
     @JoinColumn(name = "awayteam_id")
     private SeasonTeam awayTeam;
 
+    @Column(name = "homegoals")
+    private int homeGoals;
+
+    @Column(name = "homexG")
+    private double homeXG;
+
+    @Column(name = "awaygoals")
+    private int awayGoals;
+
+    @Column(name = "awayxG")
+    private double awayXG;
+
     @Column(name = "hasbeenplayed")
     private boolean HasBeenPlayed;
 
     @Column(name = "understatid")
     private int understatId;
+
 
     public int getId() {
         return Id;
@@ -75,5 +88,37 @@ public class Game{
 
     public void setUnderstatId(int understatId) {
         this.understatId = understatId;
+    }
+
+    public int getHomeGoals() {
+        return homeGoals;
+    }
+
+    public void setHomeGoals(int homeGoals) {
+        this.homeGoals = homeGoals;
+    }
+
+    public double getHomeXG() {
+        return homeXG;
+    }
+
+    public void setHomeXG(double homeXG) {
+        this.homeXG = homeXG;
+    }
+
+    public int getAwayGoals() {
+        return awayGoals;
+    }
+
+    public void setAwayGoals(int awayGoals) {
+        this.awayGoals = awayGoals;
+    }
+
+    public double getAwayXG() {
+        return awayXG;
+    }
+
+    public void setAwayXG(double awayXG) {
+        this.awayXG = awayXG;
     }
 }

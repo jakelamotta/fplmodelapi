@@ -3,6 +3,7 @@ package com.fplstats.api;
 import com.fplstats.business.adapter.DataImporterService;
 import com.fplstats.business.adapter.MatcherService;
 import com.fplstats.business.datacollection.DataCollectorService;
+import com.fplstats.business.model.Calculator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,14 +19,32 @@ public class FplStatsController {
     private MatcherService matcherService;
     private DataCollectorService dataCollectorService;
     private DataImporterService importerService;
+    private Calculator calculator;
 
     public FplStatsController(){
 
+        calculator = new Calculator();
         dataCollectorService = new DataCollectorService();
         importerService = new DataImporterService();
         matcherService = new MatcherService();
     }
 
+    @RequestMapping("/Model/Calculate")
+    public String calculate(){
+        String result = "Fel";
+
+        try
+        {
+            result = calculator.calculate();
+        }
+        catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
 
     @RequestMapping("/")
     public String Index(){

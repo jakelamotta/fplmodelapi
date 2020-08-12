@@ -18,6 +18,14 @@ public class UnderstatGameJsonObject{
 
     private boolean isResult;
 
+    private int homeGoals;
+
+    private int awayGoals;
+
+    private double homeXG;
+
+    private double awayXG;
+
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private Date datetime;
 
@@ -30,6 +38,19 @@ public class UnderstatGameJsonObject{
     private void unpackAwayTeam(Map<String,Object> a) {
         this.away_team = (String)a.get("title");
     }
+
+    @JsonProperty("goals")
+    private void unpackHomeGoals(Map<String,Object> h) {
+        this.homeGoals = Integer.parseInt(h.get("h").toString());
+        this.awayGoals = Integer.parseInt(h.get("a").toString());
+    }
+
+    @JsonProperty("xG")
+    private void unpackHomeXG(Map<String,Object> h) {
+        this.homeXG = Double.parseDouble(h.get("h").toString());
+        this.awayXG = Double.parseDouble(h.get("a").toString());
+    }
+
 
     public int getId() {
         return id;
@@ -61,5 +82,21 @@ public class UnderstatGameJsonObject{
 
     public void setDatetime(Date datetime) {
         this.datetime = datetime;
+    }
+
+    public int getHomeGoals() {
+        return homeGoals;
+    }
+
+    public int getAwayGoals() {
+        return awayGoals;
+    }
+
+    public double getHomeXG() {
+        return homeXG;
+    }
+
+    public double getAwayXG() {
+        return awayXG;
     }
 }

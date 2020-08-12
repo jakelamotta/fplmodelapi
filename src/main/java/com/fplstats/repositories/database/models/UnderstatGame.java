@@ -23,6 +23,18 @@ public class UnderstatGame{
     @Column(name = "awayTeamName")
     private String awayTeamName;
 
+    @Column(name = "homegoals")
+    private int homeGoals;
+
+    @Column(name = "homexG")
+    private double homeXG;
+
+    @Column(name = "awaygoals")
+    private int awayGoals;
+
+    @Column(name = "awayxG")
+    private double awayXG;
+
     @Column(name = "datetime")
     @Temporal(TemporalType.DATE)
     private Date datetime;
@@ -73,5 +85,37 @@ public class UnderstatGame{
 
     public void setSeasonId(int seasonId) {
         this.seasonId = seasonId;
+    }
+
+    public int getHomeGoals() {
+        return homeGoals;
+    }
+
+    public void setHomeGoals(int homeGoals) {
+        this.homeGoals = homeGoals;
+    }
+
+    public double getHomeXG() {
+        return homeXG;
+    }
+
+    public void setHomeXG(double homeXG) {
+        this.homeXG = homeXG;
+    }
+
+    public int getAwayGoals() {
+        return awayGoals;
+    }
+
+    public void setAwayGoals(int awayGoals) {
+        this.awayGoals = awayGoals;
+    }
+
+    public double getAwayXG() {
+        return awayXG;
+    }
+
+    public void setAwayXG(double awayXG) {
+        this.awayXG = awayXG;
     }
 }

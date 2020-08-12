@@ -611,7 +611,6 @@ public class EntityWriter implements IEntityWriter{
                     gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getSeason().getId(),
                     gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().getId());
 
-            //TODO: Kolla om stats finns
             try{
                 gameStats =  (GameStats) manager.createQuery("from GameStats as Gs where game.id = ?1 AND seasonTeamPlayer.id = ?2")
                         .setParameter(1, gameStatsDto.getGame().getId())
@@ -646,6 +645,38 @@ public class EntityWriter implements IEntityWriter{
 
         return result;
     }
+
+
+    public void saveCalculatedStatistics(List<CalculatedPlayerStatisticsDto> calcs) {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+        Iterator it = calcs.iterator();
+        CalculatedPlayerStatisticsDto calculatedPlayerStatisticsDto;
+
+        manager.getTransaction().begin();
+
+        manager.createNativeQuery("truncate table calculatedplayerstatistics").executeUpdate();
+
+        while (it.hasNext()){
+
+            calculatedPlayerStatisticsDto = (CalculatedPlayerStatisticsDto) it.next();
+
+            CalculatedPlayerStatistics calculatedPlayerStatistics = new CalculatedPlayerStatistics();
+            calculatedPlayerStatistics.setCost(calculatedPlayerStatisticsDto.getCost());
+            calculatedPlayerStatistics.setPlayerName(calculatedPlayerStatisticsDto.getPlayerName());
+            calculatedPlayerStatistics.setPosition(calculatedPlayerStatisticsDto.getPosition().getName());
+            calculatedPlayerStatistics.setxPAbs(calculatedPlayerStatisticsDto.getxPAbs());
+            calculatedPlayerStatistics.setxPPoundGame(calculatedPlayerStatisticsDto.getxPPoundGame());
+            calculatedPlayerStatistics.setMinutesplayed((int)calculatedPlayerStatisticsDto.getMinutesPlayed());
+
+
+            manager.persist(calculatedPlayerStatistics);
+        }
+
+        manager.getTransaction().commit();
+    }
+
 
     private TeamDto saveTeam(TeamDto teamDto) {
 

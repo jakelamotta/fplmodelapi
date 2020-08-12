@@ -31,7 +31,7 @@ public class MatcherService {
             return "Fail - could not update games";
         }
 
-        result = updateGameStatistics();
+        //result = updateGameStatistics();
 
         if (!result.Success){
             return "Fail - could not update gamestatistics";

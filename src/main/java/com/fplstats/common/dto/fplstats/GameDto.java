@@ -3,6 +3,7 @@ package com.fplstats.common.dto.fplstats;
 import com.fplstats.repositories.database.models.Season;
 import com.fplstats.repositories.database.models.SeasonTeam;
 
+import javax.persistence.*;
 import java.util.Date;
 
 public class GameDto{
@@ -13,6 +14,10 @@ public class GameDto{
     private SeasonTeamDto homeTeam;
     private Date date;
     private SeasonDto season;
+    private int homeGoals;
+    private double homeXG;
+    private int awayGoals;
+    private double awayXG;
 
     public int getUnderstatid() {
         return understatid;
@@ -61,5 +66,37 @@ public class GameDto{
 
     public void setSeason(SeasonDto season) {
         this.season = season;
+    }
+
+    public int getHomeGoals() {
+        return homeGoals;
+    }
+
+    public void setHomeGoals(int homeGoals) {
+        this.homeGoals = homeGoals;
+    }
+
+    public double getHomeXG() {
+        return homeXG;
+    }
+
+    public void setHomeXG(double homeXG) {
+        this.homeXG = homeXG;
+    }
+
+    public int getAwayGoals() {
+        return awayGoals;
+    }
+
+    public void setAwayGoals(int awayGoals) {
+        this.awayGoals = awayGoals;
+    }
+
+    public double getAwayXG() {
+        return awayXG;
+    }
+
+    public void setAwayXG(double awayXG) {
+        this.awayXG = awayXG;
     }
 }

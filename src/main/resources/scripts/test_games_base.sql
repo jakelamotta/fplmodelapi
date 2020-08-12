@@ -22,6 +22,16 @@ and s.startyear in (2015)
 and s.id = st.season_id
 and gs.seasonteamplayer_id = stp.id;
 
+select sum(minutesplayed)-2462
+from gamestats gs, seasonteamplayer stp, seasonteam st, season s, player p, team t
+where p.name = 'Chris Wood'
+and stp.player_id = p.id
+and stp.seasonteam_id = st.id
+and st.team_id = t.id
+and t.name = 'Burnley'
+and s.startyear in (2019)
+and s.id = st.season_id
+and gs.seasonteamplayer_id = stp.id;
 
 select sum(minutesplayed)-5129
 from gamestats gs, seasonteamplayer stp, player p

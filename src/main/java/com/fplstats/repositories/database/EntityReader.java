@@ -99,14 +99,7 @@ public class EntityReader{
 
             player = (Player) it.next();
 
-            PlayerDto playerDto = new PlayerDto();
-
-            playerDto.setFplId(player.getFplId());
-            playerDto.setCost(player.getCost());
-            playerDto.setName(player.getName());
-            playerDto.setId(player.getId());
-
-            result.Data.add(playerDto);
+            result.Data.add(Mapper.mapPlayer(player));
         }
 
         result.Success = result.Data.size() > 0;
@@ -267,6 +260,11 @@ public class EntityReader{
             gameDto.setDate(understatGame.getDatetime());
             gameDto.setSeason(seasonDto);
 
+            gameDto.setHomeGoals(understatGame.getHomeGoals());
+            gameDto.setAwayGoals(understatGame.getAwayGoals());
+            gameDto.setAwayXG(understatGame.getAwayXG());
+            gameDto.setHomeXG(understatGame.getHomeXG());
+
             result.Data.add(gameDto);
         }
 
@@ -296,22 +294,7 @@ public class EntityReader{
 
             next = (Game) it.next();
 
-            gameDto = new GameDto();
-            gameDto.setUnderstatid(next.getUnderstatId());
-            gameDto.setSeason(new SeasonDto());
-            gameDto.getSeason().setId(next.getSeason().getId());
-
-            gameDto.setDate(next.getGameDay());
-
-            gameDto.setAwayTeam(new SeasonTeamDto());
-            gameDto.getAwayTeam().setTeam(new TeamDto());
-            gameDto.getAwayTeam().getTeam().setName(next.getAwayTeam().getTeam().getName());
-
-            gameDto.setHomeTeam(new SeasonTeamDto());
-            gameDto.getHomeTeam().setTeam(new TeamDto());
-            gameDto.getHomeTeam().getTeam().setName(next.getHomeTeam().getTeam().getName());
-
-            gameDtos.add(gameDto);
+            gameDtos.add(Mapper.mapGameDto(next));
         }
 
         return  gameDtos;
@@ -496,5 +479,85 @@ public class EntityReader{
 
         return game;
 
+    }
+
+    public List<GameStatsDto> getAllGamestatistics() throws NonExistingGameException {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+        List<GameStats> gameStatsList;
+        List<GameStatsDto> gameStatsDtoList = new ArrayList<>();
+        GameStats gameStats;
+
+        try{
+            gameStatsList =  manager.createQuery("from GameStats order by game.gameDay desc")
+                    .getResultList();
+        }
+        catch (NoResultException e){
+            throw new NonExistingGameException("Could not find any games. Make sure games are imported");
+        }
+
+        Iterator it = gameStatsList.iterator();
+
+        while (it.hasNext()){
+
+            gameStats = (GameStats) it.next();
+            gameStatsDtoList.add(Mapper.mapGameStatsDto(gameStats));
+        }
+
+        return gameStatsDtoList;
+    }
+
+    public List<GameDto> getLastXGamesByTeam(int teamId, int take) throws NonExistingGameException {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+        List<Game> games;
+        List<GameDto> gameDtos = new ArrayList<>();
+
+        try{
+            games =  manager.createQuery("from Game as G where (G.homeTeam.team.id = ?1 or G.awayTeam.team.id = ?1) order by gameDay desc")
+                    .setParameter(1, teamId)
+                    .setMaxResults(take)
+                    .getResultList();
+        }
+        catch (NoResultException e){
+            throw new NonExistingGameException("Could not find any games for team with id: " + teamId + ". Make sure games are imported");
+        }
+
+        Iterator it = games.iterator();
+
+        while (it.hasNext()){
+            gameDtos.add(Mapper.mapGameDto((Game) it.next()));
+        }
+
+        return gameDtos;
+    }
+
+
+    public List<TeamDto> getActiveTeams() throws NonExistingTeamException {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+
+        List<SeasonTeam> seasonTeams;
+        List<TeamDto> teamDtos = new ArrayList<>();
+
+        try{
+            seasonTeams =  manager.createQuery("from SeasonTeam as st where st.season.isactive = 1")
+                    .getResultList();
+        }
+        catch (NoResultException e){
+            throw new NonExistingTeamException("No active teams");
+        }
+
+        Iterator it = seasonTeams.iterator();
+
+        while (it.hasNext()){
+            SeasonTeamDto seasonTeamDto = Mapper.mapSeasonTeam((SeasonTeam) it.next());
+            teamDtos.add(seasonTeamDto.getTeam());
+        }
+
+        return teamDtos;
     }
 }

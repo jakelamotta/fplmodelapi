@@ -9,6 +9,10 @@ import com.fplstats.common.dto.fplstats.Result;
 import com.fplstats.repositories.database.EntityReader;
 import com.fplstats.repositories.database.EntityWriter;
 import com.fplstats.repositories.database.FileProvider;
+import com.fplstats.repositories.database.IEntityWriter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,9 +27,7 @@ public class DataImporterService {
     private EntityWriter entityWriter;
 
     public DataImporterService(){
-
         entityWriter = new EntityWriter();
-
     }
 
     public String importFplData() throws JsonProcessingException {

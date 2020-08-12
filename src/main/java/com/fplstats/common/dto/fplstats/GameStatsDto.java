@@ -1,9 +1,5 @@
 package com.fplstats.common.dto.fplstats;
 
-import com.fplstats.repositories.database.models.Game;
-import com.fplstats.repositories.database.models.SeasonTeamPlayer;
-
-import javax.persistence.*;
 
 public class GameStatsDto{
 
