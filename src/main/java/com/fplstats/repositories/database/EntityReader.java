@@ -307,7 +307,7 @@ public class EntityReader{
 
         Result<List<GameStatsDto>> result = new Result<>();
 
-        List<GameStatsDto> understatGameStats  =
+        List<UnderstatGamePlayer> understatGameStats  =
                 manager.createQuery("from UnderstatGamePlayer where understatgameid = ?1"
                 ).setParameter(1, gameDto.getUnderstatid())
                         .getResultList();
@@ -334,6 +334,7 @@ public class EntityReader{
 
             gameStatsDto = new GameStatsDto();
 
+            gameStatsDto.setUnderstatid(understatGamePlayer.getUnderstatId());
             gameStatsDto.setAssists(understatGamePlayer.getAssists());
             gameStatsDto.setGame(new GameDto());
             gameStatsDto.getGame().setUnderstatid(understatGamePlayer.getUnderstatGameId());
@@ -365,7 +366,7 @@ public class EntityReader{
             result.Data.add(gameStatsDto);
         }
 
-        result.Success = result.Data.size() > 0;
+        result.Success = result.Data.size() >= 0;
 
         if (manager.getTransaction().isActive()){
             manager.getTransaction().commit();
@@ -559,5 +560,24 @@ public class EntityReader{
         }
 
         return teamDtos;
+    }
+
+    public Result<SeasonDto> getActiveSeason() {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+        Result<SeasonDto> result = new Result<>();
+        result.Success = true;
+
+        Season season = (Season) manager.createQuery("from Season where isActive = 1")
+                .getSingleResult();
+
+        SeasonDto seasonDto = new SeasonDto();
+        seasonDto.setId(season.getId());
+        seasonDto.setStartYear(season.getStartYear());
+        seasonDto.setCurrent(season.isActive());
+        result.Data = seasonDto;
+
+        return result;
     }
 }

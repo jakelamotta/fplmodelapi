@@ -1,6 +1,7 @@
 package com.fplstats.business.datacollection;
 
 import com.fplstats.common.dto.fplstats.Result;
+import com.fplstats.common.dto.fplstats.SeasonDto;
 import com.fplstats.repositories.database.EntityReader;
 import com.fplstats.repositories.database.FileProvider;
 import com.fplstats.repositories.services.fpl.FplApiProvider;
@@ -98,4 +99,14 @@ public class DataCollectorService {
         return "Error in data-collection";
     }
 
+    public SeasonDto getActiveSeason() {
+
+        Result<SeasonDto> result = entityReader.getActiveSeason();
+
+        if (result.Success){
+            return result.Data;
+        }
+
+        throw new NullPointerException("No active season");
+    }
 }

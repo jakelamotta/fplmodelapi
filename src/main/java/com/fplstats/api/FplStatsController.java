@@ -4,6 +4,7 @@ import com.fplstats.business.adapter.DataImporterService;
 import com.fplstats.business.adapter.MatcherService;
 import com.fplstats.business.datacollection.DataCollectorService;
 import com.fplstats.business.model.Calculator;
+import com.fplstats.common.dto.fplstats.SeasonDto;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,7 +59,7 @@ public class FplStatsController {
 
         try
         {
-            result = matcherService.matchFplData();
+            result = matcherService.adaptFplData();
         }
         catch (Exception e)
         {
@@ -76,7 +77,7 @@ public class FplStatsController {
 
         try
         {
-            result = matcherService.matchTeams();
+            result = matcherService.adaptTeams();
         }
         catch (Exception e)
         {
@@ -94,7 +95,7 @@ public class FplStatsController {
 
         try
         {
-            result = matcherService.matchGames();
+            result = matcherService.adaptGames();
         }
         catch (Exception e)
         {
@@ -311,13 +312,32 @@ public class FplStatsController {
         return result;
     }
 
+    @RequestMapping("/Adapter/Match/Manual")
+    public String MatchAll(@RequestParam(name = "understatname") String understatName,
+                           @RequestParam(name = "fplname") String fplname){
+        String result = "Fel";
+
+        try
+        {
+            result = matcherService.matchManually(understatName, fplname);
+        }
+        catch (Exception e)
+        {
+            System.out.println("IOException");
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+    }
+
     @RequestMapping("/Adapter/Adapt/All")
     public String AdaptAll(){
         String result = "Fel";
 
         try
         {
-            result = matcherService.matchFplData();
+            result = matcherService.adaptFplData();
 
             if (result != "Success"){
                 return  result;
@@ -329,7 +349,13 @@ public class FplStatsController {
                 return  result;
             }
 
-            result = matcherService.matchGames();matcherService.matchTeams();
+            result = matcherService.adaptTeams();
+
+            if (result != "Success"){
+                return  result;
+            }
+
+            result = matcherService.adaptGames();
         }
         catch (Exception e)
         {
@@ -364,6 +390,68 @@ public class FplStatsController {
                             result = importerService.importUnderstatGamePlayers(league, year);
                         }
                     }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println("IOException");
+            System.out.println(e.getMessage());
+            result = e.getMessage();
+        }
+
+        return result;
+
+    }
+
+    @RequestMapping("/update")
+    public String update() {
+
+        String result = "Fel";
+
+        try
+        {
+            SeasonDto seasonDto = dataCollectorService.getActiveSeason();
+            int year = seasonDto.getStartYear();
+            String league = "EPL";
+
+            result = dataCollectorService.collectFplData();
+
+            if (result.equals("Success")){
+
+                result = importerService.importFplData();
+
+                if (result == "Success"){
+
+                    result = dataCollectorService.collectUnderstatBaseData(league,year);
+
+                    if (result.equals("Success")){
+                        result = importerService.importUnderstatPlayers(league,year);
+
+                        if (result.equals("Success")){
+                            result = importerService.importUnderstatGames(league,year);
+
+                            if (result.equals("Success")){
+                                result = dataCollectorService.collectUnderstatNestedData(league, year);
+
+                                if (result.equals("Success")){
+                                    result = importerService.importUnderstatGamePlayers(league, year);
+
+                                    if (result.equals("Success")){
+
+                                        result = MatchAll();
+
+                                        if (result.equals("Success")){
+                                            result = AdaptAll();
+                                        }
+
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
                 }
             }
         }

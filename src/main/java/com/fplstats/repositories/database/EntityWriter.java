@@ -590,6 +590,39 @@ public class EntityWriter implements IEntityWriter{
         return result;
     }
 
+    public Result<String> match(String understatName, String fplname) {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+
+        UnderstatPlayer understatPlayer;
+
+        understatPlayer =  (UnderstatPlayer) manager.createQuery("from UnderstatPlayer as U where playerName = ?1")
+                .setParameter(1, understatName)
+                .getSingleResult();
+
+        Player player;
+
+
+        player =  (Player) manager.createQuery("from Player where name = ?1")
+                .setParameter(1, fplname)
+                .getSingleResult();
+
+        manager.getTransaction().begin();
+
+        MatchUnderstatPlayer matchUnderstatPlayer = new MatchUnderstatPlayer();
+        matchUnderstatPlayer.setPlayer(player);
+        matchUnderstatPlayer.setUnderstatPlayer(understatPlayer);
+
+        manager.persist(matchUnderstatPlayer);
+
+        manager.getTransaction().commit();
+
+        Result<String> result = new Result<>();
+        result.Success = true;
+        return result;
+    }
+
     public Result<String> saveGameStats(List<GameStatsDto> data) throws NonExistingSeasonTeamPlayerException, NonExistingGameException, NonExistingTeamException {
 
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
@@ -621,10 +654,18 @@ public class EntityWriter implements IEntityWriter{
                 gameStats = null;
             }
 
+
+            UnderstatGamePlayer understatGamePlayer;
+
             if (gameStats == null){
                 gameStats = new GameStats();
                 gameStats.setSeasonTeamPlayer(stp);
                 gameStats.setGame(getGameById(gameStatsDto.getGame().getId()));
+            }
+            else{
+                understatGamePlayer  = manager.find(UnderstatGamePlayer.class, gameStatsDto.getUnderstatid());
+                manager.remove(understatGamePlayer);
+                continue;
             }
 
             gameStats.setAssists(gameStatsDto.getAssists());
@@ -639,6 +680,9 @@ public class EntityWriter implements IEntityWriter{
             gameStats.setxGChain(gameStatsDto.getxGChain());
             gameStats.setYellowCards(gameStatsDto.getYellowCards());
             manager.persist(gameStats);
+
+            understatGamePlayer  = manager.find(UnderstatGamePlayer.class, gameStatsDto.getUnderstatid());
+            manager.remove(understatGamePlayer);
         }
 
         manager.getTransaction().commit();

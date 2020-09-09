@@ -12,7 +12,7 @@ public class PythonUtility {
 
     public static Result<String> ExecutePythonScript(String path, String[] args) throws IOException, InterruptedException {
 
-        String command = "C:\\Users\\krijoh3\\AppData\\Local\\Programs\\Python\\Python37\\python.exe";
+        String command = "C:\\Users\\krist\\AppData\\Local\\Programs\\Python\\Python38-32\\python.exe";
 
 
         ProcessBuilder processBuilder =

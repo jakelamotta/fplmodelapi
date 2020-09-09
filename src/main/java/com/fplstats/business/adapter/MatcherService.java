@@ -23,7 +23,7 @@ public class MatcherService {
         entityWriter = new EntityWriter();
     }
 
-    public String matchGames() throws NonExistingTeamException, NonExistingSeasonTeamPlayerException, NonExistingGameException {
+    public String adaptGames() throws NonExistingTeamException, NonExistingSeasonTeamPlayerException, NonExistingGameException {
 
         Result<String> result = updateGames();
 
@@ -31,7 +31,7 @@ public class MatcherService {
             return "Fail - could not update games";
         }
 
-        //result = updateGameStatistics();
+        result = updateGameStatistics();
 
         if (!result.Success){
             return "Fail - could not update gamestatistics";
@@ -40,7 +40,7 @@ public class MatcherService {
         return "Success";
     }
 
-    public String matchFplData(){
+    public String adaptFplData(){
 
         Result<List<PlayerDto>> result = entityReader.getAllFplPlayers();
 
@@ -142,7 +142,7 @@ public class MatcherService {
         return "Success";
     }
 
-    public String matchTeams() {
+    public String adaptTeams() {
 
         Result<String> result = updateTeams();
 
@@ -254,5 +254,16 @@ public class MatcherService {
         result = entityWriter.saveTeams(understatGameResult.Data);
 
         return result;
+    }
+
+    public String matchManually(String understatName, String fplname) {
+
+        Result<String> result = entityWriter.match(understatName, fplname);
+
+        if (!result.Success){
+            return result.ErrorMessage;
+        }
+
+        return "Success";
     }
 }

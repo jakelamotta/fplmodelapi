@@ -1,6 +1,7 @@
 package com.fplstats.repositories.database;
 
 import com.fplstats.common.dto.fplstats.Result;
+import com.fplstats.repositories.services.understat.UnderstatsProvider;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +15,8 @@ import static org.apache.tomcat.util.http.fileupload.FileUtils.deleteDirectory;
 public class FileProvider {
 
     public static Result<String> WriteFileContent(String data, String filename) {
-        String basePath = "C:\\Users\\krijoh3\\IdeaProjects\\fplstats\\src\\main\\resources\\data\\";
+        String currentPath = UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String basePath = currentPath + "\\..\\..\\src\\main\\resources\\data\\";
         String path = basePath + filename;
         Result<String> result = new Result<>();
         result.Success = true;
@@ -45,8 +47,9 @@ public class FileProvider {
     }
 
     public static Result<String> ReadFileContent(String filename, boolean absolutePath) {
+        String currentPath = UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String basePath = currentPath + "\\..\\..\\src\\main\\resources\\data\\";
 
-        String basePath = "C:\\Users\\krijoh3\\IdeaProjects\\fplstats\\src\\main\\resources\\data\\";
         String path;
 
         if (absolutePath){

@@ -110,7 +110,7 @@ public class DataImporterService {
 
     public String importUnderstatGamePlayers(String leagueName, int year) throws IOException {
 
-        String basePath = "C:\\Users\\krijoh3\\IdeaProjects\\fplstats\\src\\main\\resources\\data\\";
+        String basePath = "C:\\Users\\krist\\IdeaProjects\\fplmodelapi\\src\\main\\resources\\data\\";
         String path = basePath + "\\Understat\\" + leagueName + "\\" + year;
 
         List<String> paths = Files.walk(Paths.get(path)).filter(Files::isDirectory).map(s -> s.toString()).collect(Collectors.toList());

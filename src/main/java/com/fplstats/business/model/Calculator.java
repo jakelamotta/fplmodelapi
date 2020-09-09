@@ -5,9 +5,9 @@ import com.fplstats.common.exception.NonExistingGameException;
 import com.fplstats.common.exception.NonExistingTeamException;
 import com.fplstats.repositories.database.EntityReader;
 import com.fplstats.repositories.database.EntityWriter;
-import com.fplstats.repositories.database.models.CalculatedPlayerStatistics;
-import com.fplstats.repositories.database.models.Game;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 
 public class Calculator {
@@ -69,10 +69,12 @@ public class Calculator {
 
             AggregatedPlayerStatsDto aggregatedPlayerStatsDto = playerDictionary.get(element);
 
-            //All calcs
-            CalculatedPlayerStatisticsDto calculatedPlayerStatistics = addXgAndXsPoints(aggregatedPlayerStatsDto);
-            addCsXp(teamDictionary.get(aggregatedPlayerStatsDto.getCurrentTeam().getId()), calculatedPlayerStatistics, linearRegressionDto);
-            calcs.add(calculatedPlayerStatistics);
+            if (aggregatedPlayerStatsDto.getNrOfGames() > 0.0){
+                //All calcs
+                CalculatedPlayerStatisticsDto calculatedPlayerStatistics = addXgAndXsPoints(aggregatedPlayerStatsDto);
+                addCsXp(teamDictionary.get(aggregatedPlayerStatsDto.getCurrentTeam().getId()), calculatedPlayerStatistics, linearRegressionDto);
+                calcs.add(calculatedPlayerStatistics);
+            }
         }
 
         entityWriter.saveCalculatedStatistics(calcs);
@@ -124,10 +126,6 @@ public class Calculator {
         calculatedPlayerStatistics.setPosition(aggregatedPlayerStatsDto.getPlayer().getPosition());
 
         double xPGame = 0.0;
-
-        if (calculatedPlayerStatistics.getPlayerName() == "Danny Ings"){
-            String t = "!";
-        }
 
         switch (aggregatedPlayerStatsDto.getPlayer().getPosition().getId()){
 
@@ -217,7 +215,14 @@ public class Calculator {
     }
 
     private double getPlayerGameWeight(Date date){
-        return 1;
+
+        LocalDate when = LocalDate.now().minusDays(300);
+
+        if (date.after(Date.from(when.atStartOfDay().toInstant(ZoneOffset.UTC)))){
+            return 1;
+        }
+
+        return 0;
     }
 
     private Map<Integer, AggregatedSeasonTeamStatsDto> createSeasonTeamDictionary(List<GameDto> games) {

@@ -7,7 +7,7 @@
 
         <properties>
             <property name="hibernate.connection.driver_class" value="com.mysql.cj.jdbc.Driver"/>
-            <property name="hibernate.connection.url" value="jdbc:mysql://localhost:3306/fpldata_dev"/>
+            <property name="hibernate.connection.url" value="jdbc:mysql://localhost:3306/fpldata_dev?useJDBCCompliantTimezoneShift=true&amp;serverTimezone=UTC"/>
             <property name="hibernate.connection.autocommit" value="false"/>
             <property name="hibernate.connection.username" value="root"/>
             <property name="hibernate.connection.password" value="REzuc5vyirNrT9nQpqyu"/>
@@ -17,6 +17,7 @@
             <property name="hibernate.connection.useUnicode" value="true"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="serverTimezone" value=""/>
             <!-- use encache provider-->
             <!--<property name="hibernate.cache.region.factory_class"-->
             <!--value="org.hibernate.cache.ehcache.EhCacheRegionFactory"/>-->

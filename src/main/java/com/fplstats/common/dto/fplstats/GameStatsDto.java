@@ -5,6 +5,8 @@ public class GameStatsDto{
 
     private int Id;
 
+    private int understatid;
+
     private GameDto game;
 
     private SeasonTeamPlayerDto seasonTeamPlayer;
@@ -141,5 +143,13 @@ public class GameStatsDto{
 
     public void setxGBuildup(double xGBuildup) {
         this.xGBuildup = xGBuildup;
+    }
+
+    public int getUnderstatid() {
+        return understatid;
+    }
+
+    public void setUnderstatid(int understatid) {
+        this.understatid = understatid;
     }
 }
