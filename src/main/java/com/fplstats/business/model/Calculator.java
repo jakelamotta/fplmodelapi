@@ -8,6 +8,7 @@ import com.fplstats.repositories.database.EntityWriter;
 
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class Calculator {
@@ -28,7 +29,7 @@ public class Calculator {
         entityReader = new EntityReader();
     }
 
-    public String calculate() throws NonExistingGameException, NonExistingTeamException {
+    public String calculate(LocalDate startFrom, int nrOfDaysUsed) throws NonExistingGameException, NonExistingTeamException {
 
         LinearRegressionDto linearRegressionDto;
         Map<Integer, AggregatedPlayerStatsDto> playerDictionary = new Hashtable<>();
@@ -37,7 +38,7 @@ public class Calculator {
         GameStatsDto gameStats;
 
         List<GameStatsDto> gameStatsList = entityReader.getAllGamestatistics();
-        List<GameDto> allGames = entityReader.getAllGamesInSystem();
+        List<GameDto> allGames = entityReader.getAllGamesInSystem(0);
 
         Iterator iterator = gameStatsList.iterator();
 
@@ -55,7 +56,7 @@ public class Calculator {
 
             }
 
-            aggregatePlayerData(playerDictionary.get(playerDto.getId()), gameStats);
+            aggregatePlayerData(playerDictionary.get(playerDto.getId()), gameStats, startFrom, nrOfDaysUsed);
         }
 
         teamDictionary = createTeamDictionary(allGames);
@@ -69,9 +70,10 @@ public class Calculator {
 
             AggregatedPlayerStatsDto aggregatedPlayerStatsDto = playerDictionary.get(element);
 
-            if (aggregatedPlayerStatsDto.getNrOfGames() > 0.0){
+            if (aggregatedPlayerStatsDto.getWeightedNrOfGames() > 0){
                 //All calcs
                 CalculatedPlayerStatisticsDto calculatedPlayerStatistics = addXgAndXsPoints(aggregatedPlayerStatsDto);
+                calculatedPlayerStatistics.setTeamName(aggregatedPlayerStatsDto.getCurrentTeam().getName());
                 addCsXp(teamDictionary.get(aggregatedPlayerStatsDto.getCurrentTeam().getId()), calculatedPlayerStatistics, linearRegressionDto);
                 calcs.add(calculatedPlayerStatistics);
             }
@@ -119,11 +121,13 @@ public class Calculator {
 
         CalculatedPlayerStatisticsDto calculatedPlayerStatistics = new CalculatedPlayerStatisticsDto();
 
-        calculatedPlayerStatistics.setMinutesPlayed(aggregatedPlayerStatsDto.getMinutesPlayed());
-        calculatedPlayerStatistics.setNrOfGames(aggregatedPlayerStatsDto.getNrOfGames());
+        calculatedPlayerStatistics.setWeightedMinutesPlayed(aggregatedPlayerStatsDto.getWeightedNrOfMinutesPlayed());
+        calculatedPlayerStatistics.setWeightedNrOfGames(aggregatedPlayerStatsDto.getWeightedNrOfGames());
         calculatedPlayerStatistics.setCost(aggregatedPlayerStatsDto.getPlayer().getCost());
         calculatedPlayerStatistics.setPlayerName(aggregatedPlayerStatsDto.getPlayer().getName());
         calculatedPlayerStatistics.setPosition(aggregatedPlayerStatsDto.getPlayer().getPosition());
+        calculatedPlayerStatistics.setMinutesPlayed(aggregatedPlayerStatsDto.getActualMinutesPlayed());
+        calculatedPlayerStatistics.setNrOfGames(aggregatedPlayerStatsDto.getActualNrOfGames());
 
         double xPGame = 0.0;
 
@@ -150,11 +154,21 @@ public class Calculator {
         return calculatedPlayerStatistics;
     }
 
-    private void aggregatePlayerData(AggregatedPlayerStatsDto aggregatedPlayerStatsDto, GameStatsDto gameStats) {
-        aggregatedPlayerStatsDto.incrementMinutesPlayed(getPlayerGameWeight(gameStats.getGame().getDate()) * gameStats.getMinutesPlayed());
-        aggregatedPlayerStatsDto.incrementxA(getPlayerGameWeight(gameStats.getGame().getDate()) * gameStats.getxA());
-        aggregatedPlayerStatsDto.incrementxG(getPlayerGameWeight(gameStats.getGame().getDate()) * gameStats.getxG());
-        aggregatedPlayerStatsDto.incrementNrOfGames(getPlayerGameWeight(gameStats.getGame().getDate()));
+    private void aggregatePlayerData(AggregatedPlayerStatsDto aggregatedPlayerStatsDto, GameStatsDto gameStats, LocalDate startFrom, int nrOfDaysUsed) {
+
+
+
+        double gameWeight = getPlayerGameWeight(startFrom, gameStats.getGame().getDate(), nrOfDaysUsed);
+
+        aggregatedPlayerStatsDto.incrementWeightedNrOfMinutesPlayed(gameWeight * gameStats.getMinutesPlayed());
+        aggregatedPlayerStatsDto.incrementxA(gameWeight * gameStats.getxA());
+        aggregatedPlayerStatsDto.incrementxG(gameWeight * gameStats.getxG());
+        aggregatedPlayerStatsDto.incrementWeightedNrOfGames(gameWeight);
+
+        if (gameWeight > 0.0){
+            aggregatedPlayerStatsDto.incrementActualMinutesPlayed(gameStats.getMinutesPlayed());
+            aggregatedPlayerStatsDto.incrementActualNrOfGames(1);
+        }
     }
 
 
@@ -214,15 +228,39 @@ public class Calculator {
         aggregatedTeamStatsDto.incrementNrOfGames();
     }
 
-    private double getPlayerGameWeight(Date date){
+    //Startfrom is usually now
+    private double getPlayerGameWeight(LocalDate startFrom, Date gameDate, int nrOfDaysUsed){
 
-        LocalDate when = LocalDate.now().minusDays(300);
+        int lastMonth = 30;
 
-        if (date.after(Date.from(when.atStartOfDay().toInstant(ZoneOffset.UTC)))){
-            return 1;
+        if (startFrom == null){
+            startFrom = LocalDate.now();
         }
 
-        return 0;
+        if (nrOfDaysUsed == 0){
+            nrOfDaysUsed = 300;
+        }
+
+        double weightFactor = 2.0;
+
+        LocalDate when = startFrom.minusDays(lastMonth);
+
+        if (gameDate.after(Date.from(when.atStartOfDay().toInstant(ZoneOffset.UTC)))){
+            return weightFactor;
+        }
+
+        when = startFrom.minusDays(nrOfDaysUsed);
+
+        if (gameDate.before(Date.from(when.atStartOfDay().toInstant(ZoneOffset.UTC)))){
+            return 0;
+        }
+
+        when = gameDate.toInstant().atZone(ZoneOffset.UTC).toLocalDate();
+        long nrOfDay = ChronoUnit.DAYS.between(when, startFrom);
+
+        double weight = weightFactor - ((weightFactor/nrOfDaysUsed) * nrOfDay);
+
+        return weight;
     }
 
     private Map<Integer, AggregatedSeasonTeamStatsDto> createSeasonTeamDictionary(List<GameDto> games) {
