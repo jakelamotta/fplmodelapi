@@ -20,9 +20,10 @@ import java.util.List;
 @Repository
 public class EntityWriter implements IEntityWriter{
 
-    @Bean
-    public EntityWriter getEntityWriter(){
-        return new EntityWriter();
+    private EntityReader entityReader;
+
+    public EntityWriter(){
+        entityReader = new EntityReader();
     }
 
     public Result<String> saveFplPlayers(List<FplJsonObject> fplJsonObject) {
@@ -78,8 +79,7 @@ public class EntityWriter implements IEntityWriter{
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
 
-        Season season = (Season) manager.createQuery("from Season As S where league.name = ?1"
-                + " and startYear = ?2")
+        Season season = (Season) manager.createQuery("from Season As S where league.name = ?1 and startYear = ?2")
                 .setParameter(1, leagueName)
                 .setParameter(2, year).getSingleResult();
 
@@ -110,8 +110,7 @@ public class EntityWriter implements IEntityWriter{
             UnderstatPlayerSeason understatPlayerSeason;
 
             try{
-                understatPlayerSeason = (UnderstatPlayerSeason) manager.createQuery("from UnderstatPlayerSeason As U where understatPlayer.understatId = ?1"
-                        + " and season.id = ?2")
+                understatPlayerSeason = (UnderstatPlayerSeason) manager.createQuery("from UnderstatPlayerSeason As U where understatPlayer.understatId = ?1  and season.id = ?2")
                         .setParameter(1, player.getUnderstatId())
                         .setParameter(2, season.getId())
                         .getSingleResult();
@@ -148,8 +147,7 @@ public class EntityWriter implements IEntityWriter{
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
 
-        int seasonId = (Integer) manager.createQuery("select S.id from Season As S where league.name = ?1"
-                + " and startYear = ?2")
+        int seasonId = (Integer) manager.createQuery("select S.id from Season As S where league.name = ?1 and startYear = ?2")
                 .setParameter(1, leagueName)
                 .setParameter(2, year).getSingleResult();
 
@@ -200,8 +198,7 @@ public class EntityWriter implements IEntityWriter{
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
 
-        int seasonId = (Integer) manager.createQuery("select S.id from Season As S where league.name = ?1"
-                + " and startYear = ?2")
+        int seasonId = (Integer) manager.createQuery("select S.id from Season As S where league.name = ?1 and startYear = ?2")
                 .setParameter(1, leagueName)
                 .setParameter(2, year).getSingleResult();
 
@@ -497,8 +494,7 @@ public class EntityWriter implements IEntityWriter{
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
 
-        int seasonId = (Integer) manager.createQuery("select S.id from Season As S where league.name = ?1"
-                + " and startYear = ?2")
+        int seasonId = (Integer) manager.createQuery("select S.id from Season As S where league.name = ?1 and startYear = ?2")
                 .setParameter(1, leagueName)
                 .setParameter(2, year).getSingleResult();
 
@@ -636,6 +632,8 @@ public class EntityWriter implements IEntityWriter{
         result.Success = true;
         manager.getTransaction().begin();
 
+        Result<SeasonDto> season = entityReader.getActiveSeason();
+
         while (it.hasNext()){
 
             gameStatsDto = (GameStatsDto) it.next();
@@ -700,7 +698,7 @@ public class EntityWriter implements IEntityWriter{
 
         manager.getTransaction().begin();
 
-        manager.createNativeQuery("truncate table calculatedplayerstatistics").executeUpdate();
+        int svar = manager.createNativeQuery("truncate table calculatedplayerstatistics").executeUpdate();
 
         while (it.hasNext()){
 
@@ -713,7 +711,7 @@ public class EntityWriter implements IEntityWriter{
             calculatedPlayerStatistics.setxPAbs(calculatedPlayerStatisticsDto.getxPAbs());
             calculatedPlayerStatistics.setxPPoundGame(calculatedPlayerStatisticsDto.getxPPoundGame());
             calculatedPlayerStatistics.setMinutesplayed((int)calculatedPlayerStatisticsDto.getMinutesPlayed());
-
+            calculatedPlayerStatistics.setTeamName(calculatedPlayerStatisticsDto.getTeamName());
 
             manager.persist(calculatedPlayerStatistics);
         }

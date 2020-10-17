@@ -10,9 +10,15 @@ public class CalculatedPlayerStatisticsDto{
 
     private PositionDto position;
 
-    private double minutesPlayed;
+    private double weightedMinutesPlayed;
 
-    private double nrOfGames;
+    private double weightedNrOfGames;
+
+    private int minutesPlayed;
+
+    private int nrOfGames;
+
+
 
     private double cost;
 
@@ -78,27 +84,23 @@ public class CalculatedPlayerStatisticsDto{
 
     public void incrementXPGame(double xP){
 
-        if (minutesPlayed == 0 || nrOfGames == 0){
+        if (weightedMinutesPlayed == 0 || weightedNrOfGames == 0){
             throw new NullPointerException("Minutesplayed and nrOfGames cannot be 0");
         }
 
-        if (this.getPlayerName() == "Conor Coady"){
-            this.setPlayerName("Conor Coady");
-        }
-
         xP = xP/cost;
-        xP = xP/nrOfGames;
+        xP = xP/weightedNrOfGames;
         this.xPPoundGame += xP;
     }
 
     public void setxPPoundGame(double xP) {
 
-        if (minutesPlayed == 0 || nrOfGames == 0){
+        if (weightedMinutesPlayed == 0 || weightedNrOfGames == 0){
             throw new NullPointerException("Minutesplayed and nrOfGames cannot be 0");
         }
 
         xP = xP/cost;
-        xP = xP/nrOfGames;
+        xP = xP/weightedNrOfGames;
         this.xPPoundGame = xP;
     }
 
@@ -108,38 +110,51 @@ public class CalculatedPlayerStatisticsDto{
 
     public void setxPAbs(double xPAbs) {
 
-        if (minutesPlayed == 0 || nrOfGames == 0){
+        if (weightedMinutesPlayed == 0 || weightedNrOfGames == 0){
             throw new NullPointerException("Minutesplayed and nrOfGames cannot be 0");
         }
 
-        this.xPAbs = xPAbs/nrOfGames;
+        this.xPAbs = xPAbs/weightedNrOfGames;
+    }
+
+    public void setxPAbs2(double xPAbs) {
+
+        this.xPAbs = xPAbs;
     }
 
     public void incrementxPAbs(double pxAbs){
-        if (minutesPlayed == 0 || nrOfGames == 0){
+        if (weightedMinutesPlayed == 0 || weightedNrOfGames == 0){
             throw new NullPointerException("Minutesplayed and nrOfGames cannot be 0");
         }
 
-        this.xPAbs += xPAbs/nrOfGames;
-    }
-
-    public double getMinutesPlayed() {
-        return minutesPlayed;
-    }
-
-    public void setMinutesPlayed(double minutesPlayed) {
-        this.minutesPlayed = minutesPlayed;
-    }
-
-    public double getNrOfGames() {
-        return nrOfGames;
-    }
-
-    public void setNrOfGames(double nrOfGames) {
-        this.nrOfGames = nrOfGames;
+        this.xPAbs += xPAbs/weightedNrOfGames;
     }
 
     public double getxPPoundGame() {
         return xPPoundGame;
+    }
+
+    public int getMinutesPlayed() {
+        return minutesPlayed;
+    }
+
+    public void setMinutesPlayed(int minutesPlayed) {
+        this.minutesPlayed = minutesPlayed;
+    }
+
+    public int getNrOfGames() {
+        return nrOfGames;
+    }
+
+    public void setNrOfGames(int nrOfGames) {
+        this.nrOfGames = nrOfGames;
+    }
+
+    public void setWeightedMinutesPlayed(double weightedMinutesPlayed) {
+        this.weightedMinutesPlayed = weightedMinutesPlayed;
+    }
+
+    public void setWeightedNrOfGames(double weightedNrOfGames) {
+        this.weightedNrOfGames = weightedNrOfGames;
     }
 }

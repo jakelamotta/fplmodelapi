@@ -5,12 +5,15 @@ public class AggregatedPlayerStatsDto{
     private PlayerDto player;
     private TeamDto currentTeam;
 
-    private double minutesPlayed;
-    private double nrOfGames;
+    private double weightedNrOfMinutesPlayed;
+    private double weightedNrOfGames;
     private double xG;
     private double xA;
     private double xYc;
     private double xRc;
+
+    private int actualMinutesPlayed;
+    private int actualNrOfGames;
 
     public PlayerDto getPlayer() {
         return player;
@@ -18,14 +21,6 @@ public class AggregatedPlayerStatsDto{
 
     public void setPlayer(PlayerDto player) {
         this.player = player;
-    }
-
-    public double getMinutesPlayed() {
-        return minutesPlayed;
-    }
-
-    public void incrementMinutesPlayed(double minutesPlayed) {
-        this.minutesPlayed += minutesPlayed;
     }
 
     public double getxG() {
@@ -44,19 +39,43 @@ public class AggregatedPlayerStatsDto{
         this.xA += xA;
     }
 
-    public double getNrOfGames() {
-        return nrOfGames;
-    }
-
-    public void incrementNrOfGames(double increment) {
-        this.nrOfGames += increment;
-    }
-
     public TeamDto getCurrentTeam() {
         return currentTeam;
     }
 
     public void setCurrentTeam(TeamDto currentTeam) {
         this.currentTeam = currentTeam;
+    }
+
+    public double getWeightedNrOfMinutesPlayed() {
+        return weightedNrOfMinutesPlayed;
+    }
+
+    public void incrementWeightedNrOfMinutesPlayed(double weightedNrOfMinutesPlayed) {
+        this.weightedNrOfMinutesPlayed += weightedNrOfMinutesPlayed;
+    }
+
+    public double getWeightedNrOfGames() {
+        return weightedNrOfGames;
+    }
+
+    public void incrementWeightedNrOfGames(double weightedNrOfGames) {
+        this.weightedNrOfGames += weightedNrOfGames;
+    }
+
+    public int getActualMinutesPlayed() {
+        return actualMinutesPlayed;
+    }
+
+    public void incrementActualMinutesPlayed(int actualMinutesPlayed) {
+        this.actualMinutesPlayed += actualMinutesPlayed;
+    }
+
+    public int getActualNrOfGames() {
+        return actualNrOfGames;
+    }
+
+    public void incrementActualNrOfGames(int actualNrOfGames) {
+        this.actualNrOfGames += actualNrOfGames;
     }
 }

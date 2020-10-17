@@ -215,7 +215,7 @@ public class EntityReader{
         return playerIds;
     }
 
-    public Result<List<GameDto>> getAllUnderstatGames() {
+    public Result<List<GameDto>> getAllUnderstatGames(int seasonId) {
 
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
@@ -223,8 +223,9 @@ public class EntityReader{
         Result<List<GameDto>> result = new Result<>();
 
         List<UnderstatGame> understatGames  =
-                manager.createQuery("from UnderstatGame"
-                ).getResultList();
+                manager.createQuery("from UnderstatGame where seasonId = ?1 or ?1 = 0"
+                ).setParameter(1, seasonId)
+                        .getResultList();
 
         Iterator it = understatGames.iterator();
         UnderstatGame understatGame;
@@ -277,12 +278,13 @@ public class EntityReader{
         return  result;
     }
 
-    public List<GameDto> getAllGamesInSystem() {
+    public List<GameDto> getAllGamesInSystem(int seasonId) {
         EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
         EntityManager manager = factory.createEntityManager();
 
-        List<Game> games  = manager.createQuery("from Game AS g"
-        ).getResultList();
+        List<Game> games  = manager.createQuery("from Game AS g where season.Id = ?1 or ?1 = 0"
+        ).setParameter(1, seasonId)
+                .getResultList();
 
         List<GameDto> gameDtos = new ArrayList<>();
         Game next;
@@ -299,6 +301,84 @@ public class EntityReader{
 
         return  gameDtos;
     }
+
+
+
+    public Result<List<GameStatsDto>> getAllUnderstatGameStats() throws NonExistingTeamException, NonExistingGameException
+    {
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+
+        Result<List<GameStatsDto>> result = new Result<>();
+
+        List<UnderstatGamePlayer> understatGameStats  =
+                manager.createQuery("from UnderstatGamePlayer"
+                ).getResultList();
+
+        Iterator it = understatGameStats.iterator();
+        UnderstatGamePlayer understatGamePlayer;
+        GameStatsDto gameStatsDto;
+
+        result.Data = new ArrayList<>();
+
+        while (it.hasNext()){
+
+            understatGamePlayer = (UnderstatGamePlayer) it.next();
+            int playerId = getPlayerIdFromUnderstatid(understatGamePlayer.getUnderstatPlayerId());
+            TeamDto teamDto = getTeamFromUnderstatid(understatGamePlayer.getUnderstatTeamId());
+
+            if (playerId == 0){
+                continue;
+            }
+
+            if (teamDto == null){
+                throw new NonExistingTeamException("Could not find team with id " + teamDto.getUnderstatId());
+            }
+
+            gameStatsDto = new GameStatsDto();
+
+            gameStatsDto.setUnderstatid(understatGamePlayer.getUnderstatId());
+            gameStatsDto.setAssists(understatGamePlayer.getAssists());
+            gameStatsDto.setGame(new GameDto());
+            gameStatsDto.getGame().setUnderstatid(understatGamePlayer.getUnderstatGameId());
+            gameStatsDto.getGame().setId(getGameByUnderstatId(understatGamePlayer.getUnderstatGameId()).getId());
+
+            gameStatsDto.setGoals(understatGamePlayer.getGoals());
+            gameStatsDto.setMinutesPlayed(understatGamePlayer.getTime());
+            gameStatsDto.setRedCards(understatGamePlayer.getRedCard());
+            gameStatsDto.setShots(understatGamePlayer.getShots());
+
+            gameStatsDto.setSeasonTeamPlayer(new SeasonTeamPlayerDto());
+            gameStatsDto.getSeasonTeamPlayer().setPlayer(new PlayerDto());
+            gameStatsDto.getSeasonTeamPlayer().getPlayer().setId(playerId);
+
+            gameStatsDto.getSeasonTeamPlayer().setSeasonTeam(new SeasonTeamDto());
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().setTeam(new TeamDto());
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setName(teamDto.getName());
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setId(teamDto.getId());
+
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().setSeason(new SeasonDto());
+            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getSeason().setId(understatGamePlayer.getSeasonId());
+
+            gameStatsDto.setxA(understatGamePlayer.getxA());
+            gameStatsDto.setxG(understatGamePlayer.getxG());
+            gameStatsDto.setxGBuildup(understatGamePlayer.getxGBuildup());
+            gameStatsDto.setxGChain(understatGamePlayer.getxGChain());
+            gameStatsDto.setYellowCards(understatGamePlayer.getYellowCard());
+
+            result.Data.add(gameStatsDto);
+        }
+
+        result.Success = result.Data.size() >= 0;
+
+        if (manager.getTransaction().isActive()){
+            manager.getTransaction().commit();
+        }
+
+        return  result;
+    }
+
+
 
     public Result<List<GameStatsDto>> getAllUnderstatGameStats(GameDto gameDto) throws NonExistingTeamException, NonExistingGameException {
 
@@ -577,6 +657,35 @@ public class EntityReader{
         seasonDto.setStartYear(season.getStartYear());
         seasonDto.setCurrent(season.isActive());
         result.Data = seasonDto;
+
+        return result;
+    }
+
+    public Result<List<CalculatedPlayerStatisticsDto>> getAllCalculatedPlayerStatistics() {
+
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        EntityManager manager = factory.createEntityManager();
+
+        Result<List<CalculatedPlayerStatisticsDto>> result = new Result<>();
+        result.Data = new ArrayList<>();
+        result.Success = true;
+
+        List<CalculatedPlayerStatistics> calculatedPlayerStatistics = manager.createQuery("from CalculatedPlayerStatistics where " +
+                "minutesplayed > 500").getResultList();
+
+        for (CalculatedPlayerStatistics calc : calculatedPlayerStatistics){
+
+            CalculatedPlayerStatisticsDto calcDto = new CalculatedPlayerStatisticsDto();
+            calcDto.setTeamName(calc.getTeamName());
+            calcDto.setxPAbs2(calc.getxPAbs());
+            calcDto.setCost(calc.getCost());
+            calcDto.setPlayerName(calc.getPlayerName());
+            calcDto.setPosition(new PositionDto());
+            calcDto.getPosition().setName(calc.getPosition());
+            result.Data.add(calcDto);
+
+        }
+
 
         return result;
     }

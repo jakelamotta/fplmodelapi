@@ -7,10 +7,7 @@ import com.fplstats.common.exception.NonExistingTeamException;
 import com.fplstats.repositories.database.EntityReader;
 import com.fplstats.repositories.database.EntityWriter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class MatcherService {
 
@@ -23,9 +20,9 @@ public class MatcherService {
         entityWriter = new EntityWriter();
     }
 
-    public String adaptGames() throws NonExistingTeamException, NonExistingSeasonTeamPlayerException, NonExistingGameException {
+    public String adaptGames(int seasonId) throws NonExistingTeamException, NonExistingSeasonTeamPlayerException, NonExistingGameException {
 
-        Result<String> result = updateGames();
+        Result<String> result = updateGames(seasonId);
 
         if (!result.Success){
             return "Fail - could not update games";
@@ -40,7 +37,7 @@ public class MatcherService {
         return "Success";
     }
 
-    public String adaptFplData(){
+    public String adaptFplPlayerData(){
 
         Result<List<PlayerDto>> result = entityReader.getAllFplPlayers();
 
@@ -58,7 +55,7 @@ public class MatcherService {
 
         return "Success";
     }
-
+    
     public String matchUnderstatPlayer(){
 
         Result<List<PlayerDto>> result = entityReader.getAllPlayersInSystem();
@@ -111,14 +108,12 @@ public class MatcherService {
 
             teamNames = extractTeams(matchUnderstatPlayerDto);
 
-            Iterator teamNameIt = teamNames.iterator();
-
-            while (teamNameIt.hasNext()){
+            for (String name : teamNames) {
 
                 Iterator seasonIterator = entityReader.getSeasonsForUnderstatPlayer(matchUnderstatPlayerDto.getUnderstatPlayerDto().getId()).iterator();
-                String teamName = (String) teamNameIt.next();
+                String teamName = name;
 
-                while (seasonIterator.hasNext()){
+                while (seasonIterator.hasNext()) {
 
                     int seasonId = (int) seasonIterator.next();
 
@@ -190,12 +185,12 @@ public class MatcherService {
         return teamNames;
     }
 
-    private Result<String> updateGames() {
+    private Result<String> updateGames(int seasonId) {
 
         Result<String> result = new Result<>();
         result.Success = true;
 
-        Result<List<GameDto>> understatGameResult = entityReader.getAllUnderstatGames();
+        Result<List<GameDto>> understatGameResult = entityReader.getAllUnderstatGames(seasonId);
 
         if (!understatGameResult.Success){
             result.Success = false;
@@ -214,24 +209,30 @@ public class MatcherService {
         Result<String> result = new Result<>();
         result.Success = true;
 
-        List<GameDto> gameIds = entityReader.getAllGamesInSystem();
-        Iterator it = gameIds.iterator();
+        Result<List<GameStatsDto>> understatGameStatsResult = entityReader.getAllUnderstatGameStats();
+        Map<Integer, List<GameStatsDto>> gameMap = new HashMap<>();
+        List<GameStatsDto> tempList;
 
-        while (it.hasNext()){
-            GameDto gameDto = (GameDto) it.next();
+        for (GameStatsDto gameStats : understatGameStatsResult.Data){
 
-            Result<List<GameStatsDto>> understatGameStatsResult = entityReader.getAllUnderstatGameStats(gameDto);
+            int gameId = gameStats.getGame().getId();
 
-            if (!understatGameStatsResult.Success){
-                result.Success = false;
-                result.ErrorMessage = "Could not fetch understat games";
-                return result;
+            if (!gameMap.containsKey(gameId)){
+
+                tempList = new ArrayList<>();
+            }
+            else {
+                tempList = gameMap.get(gameId);
             }
 
-            result = entityWriter.saveGameStats(understatGameStatsResult.Data);
+            tempList.add(gameStats);
+            gameMap.put(gameId, tempList);
         }
 
+        for (int gameId : gameMap.keySet()){
 
+            result = entityWriter.saveGameStats(gameMap.get(gameId));
+        }
 
         return result;
 

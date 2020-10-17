@@ -2,6 +2,7 @@ package com.fplstats.repositories.database.models;
 
 import javax.persistence.*;
 
+
 @Entity
 @Table(name = "fplplayer")
 public class FplPlayer{

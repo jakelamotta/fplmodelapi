@@ -96,5 +96,4 @@ public class Mapper{
 
         return gameDto;
     }
-
 }

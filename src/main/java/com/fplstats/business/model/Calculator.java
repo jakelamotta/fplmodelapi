@@ -98,8 +98,6 @@ public class Calculator {
 
         switch (calculatedPlayerStatistics.getPosition().getId()){
             case 1:
-                xPCs = DEF_CS_POINTS * xCs;
-                break;
             case 2:
                 xPCs = DEF_CS_POINTS * xCs;
                 break;
@@ -134,8 +132,6 @@ public class Calculator {
         switch (aggregatedPlayerStatsDto.getPlayer().getPosition().getId()){
 
             case 1:
-                xPGame = DEF_GOALS_POINTS * aggregatedPlayerStatsDto.getxG();
-                break;
             case 2:
                 xPGame = DEF_GOALS_POINTS * aggregatedPlayerStatsDto.getxG();
                 break;
@@ -155,8 +151,6 @@ public class Calculator {
     }
 
     private void aggregatePlayerData(AggregatedPlayerStatsDto aggregatedPlayerStatsDto, GameStatsDto gameStats, LocalDate startFrom, int nrOfDaysUsed) {
-
-
 
         double gameWeight = getPlayerGameWeight(startFrom, gameStats.getGame().getDate(), nrOfDaysUsed);
 
@@ -256,9 +250,9 @@ public class Calculator {
         }
 
         when = gameDate.toInstant().atZone(ZoneOffset.UTC).toLocalDate();
-        long nrOfDay = ChronoUnit.DAYS.between(when, startFrom);
+        long nrOfDay = ChronoUnit.DAYS.between(when, startFrom.minusDays(lastMonth));
 
-        double weight = weightFactor - ((weightFactor/nrOfDaysUsed) * nrOfDay);
+        double weight = weightFactor - ((weightFactor/(nrOfDaysUsed - lastMonth)) * nrOfDay);
 
         return weight;
     }
