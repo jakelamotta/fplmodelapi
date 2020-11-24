@@ -82,7 +82,7 @@ public class CalculatedPlayerStatisticsDto{
 //        this.xPPound90 += xP;
 //    }
 
-    public void incrementXPGame(double xP){
+    /*public void incrementXPGame(double xP){
 
         if (weightedMinutesPlayed == 0 || weightedNrOfGames == 0){
             throw new NullPointerException("Minutesplayed and nrOfGames cannot be 0");
@@ -91,7 +91,7 @@ public class CalculatedPlayerStatisticsDto{
         xP = xP/cost;
         xP = xP/weightedNrOfGames;
         this.xPPoundGame += xP;
-    }
+    }*/
 
     public void setxPPoundGame(double xP) {
 
@@ -122,12 +122,8 @@ public class CalculatedPlayerStatisticsDto{
         this.xPAbs = xPAbs;
     }
 
-    public void incrementxPAbs(double pxAbs){
-        if (weightedMinutesPlayed == 0 || weightedNrOfGames == 0){
-            throw new NullPointerException("Minutesplayed and nrOfGames cannot be 0");
-        }
-
-        this.xPAbs += xPAbs/weightedNrOfGames;
+    public void incrementxPAbs(double pxAbs, String nothing){
+        this.xPAbs += pxAbs;
     }
 
     public double getxPPoundGame() {

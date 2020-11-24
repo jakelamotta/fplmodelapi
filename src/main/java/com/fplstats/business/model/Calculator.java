@@ -40,14 +40,12 @@ public class Calculator {
         List<GameStatsDto> gameStatsList = entityReader.getAllGamestatistics();
         List<GameDto> allGames = entityReader.getAllGamesInSystem(0);
 
-        Iterator iterator = gameStatsList.iterator();
+        for (GameStatsDto gameStatsDto : gameStatsList) {
 
-        while (iterator.hasNext()){
-
-            gameStats = (GameStatsDto) iterator.next();
+            gameStats = gameStatsDto;
             PlayerDto playerDto = gameStats.getSeasonTeamPlayer().getPlayer();
 
-            if (playerDictionary.get(playerDto.getId()) == null){
+            if (playerDictionary.get(playerDto.getId()) == null) {
                 AggregatedPlayerStatsDto agg = new AggregatedPlayerStatsDto();
                 agg.setPlayer(playerDto);
                 agg.setCurrentTeam(gameStats.getSeasonTeamPlayer().getSeasonTeam().getTeam());
@@ -63,14 +61,11 @@ public class Calculator {
         seasonTeamDictionary = createSeasonTeamDictionary(allGames);
         linearRegressionDto = getCsLinearRegressionModel(seasonTeamDictionary);
         List<CalculatedPlayerStatisticsDto> calcs = new ArrayList<>();
-        Iterator it = playerDictionary.keySet().iterator();
 
-        while(it.hasNext()){
-            Integer element = (Integer) it.next();
-
+        for (Integer element : playerDictionary.keySet()) {
             AggregatedPlayerStatsDto aggregatedPlayerStatsDto = playerDictionary.get(element);
 
-            if (aggregatedPlayerStatsDto.getWeightedNrOfGames() > 0){
+            if (aggregatedPlayerStatsDto.getWeightedNrOfGames() > 0) {
                 //All calcs
                 CalculatedPlayerStatisticsDto calculatedPlayerStatistics = addXgAndXsPoints(aggregatedPlayerStatsDto);
                 calculatedPlayerStatistics.setTeamName(aggregatedPlayerStatsDto.getCurrentTeam().getName());
@@ -88,6 +83,8 @@ public class Calculator {
 
         double xCs = linearRegressionDto.getAlpha() + (agg.getxGAgainst()/agg.getNrOfGames())*linearRegressionDto.getBeta();
 
+
+
         if (xCs < 0.0){
             xCs = 0.0;
         }
@@ -98,6 +95,7 @@ public class Calculator {
 
         switch (calculatedPlayerStatistics.getPosition().getId()){
             case 1:
+                System.out.println("Keeper");
             case 2:
                 xPCs = DEF_CS_POINTS * xCs;
                 break;
@@ -110,8 +108,8 @@ public class Calculator {
         }
 
 
-        calculatedPlayerStatistics.incrementxPAbs(xPCs * calculatedPlayerStatistics.getNrOfGames());
-        calculatedPlayerStatistics.incrementXPGame(xPCs * calculatedPlayerStatistics.getNrOfGames());
+        calculatedPlayerStatistics.incrementxPAbs(xPCs , null);
+        //calculatedPlayerStatistics.incrementXPGame(xPCs * calculatedPlayerStatistics.getNrOfGames());
     }
 
 
@@ -145,7 +143,6 @@ public class Calculator {
 
         xPGame += ASSIST_POINTS * aggregatedPlayerStatsDto.getxA();
         calculatedPlayerStatistics.setxPAbs(xPGame);
-        calculatedPlayerStatistics.setxPPoundGame(xPGame);
 
         return calculatedPlayerStatistics;
     }
@@ -225,7 +222,7 @@ public class Calculator {
     //Startfrom is usually now
     private double getPlayerGameWeight(LocalDate startFrom, Date gameDate, int nrOfDaysUsed){
 
-        int lastMonth = 30;
+        int lastMonth = 50;
 
         if (startFrom == null){
             startFrom = LocalDate.now();
@@ -260,14 +257,11 @@ public class Calculator {
     private Map<Integer, AggregatedSeasonTeamStatsDto> createSeasonTeamDictionary(List<GameDto> games) {
         Map<Integer, AggregatedSeasonTeamStatsDto> seasonTeamMap = new Hashtable<>();
 
-        Iterator iterator = games.iterator();
+        for (GameDto game : games) {
 
-        while (iterator.hasNext()){
-
-            GameDto game = (GameDto) iterator.next();
             SeasonTeamDto seasonTeamDto = game.getHomeTeam();
 
-            if (seasonTeamMap.get(seasonTeamDto.getId()) == null){
+            if (seasonTeamMap.get(seasonTeamDto.getId()) == null) {
                 AggregatedSeasonTeamStatsDto agg = new AggregatedSeasonTeamStatsDto();
                 agg.setSeasonTeamDto(seasonTeamDto);
 
@@ -278,7 +272,7 @@ public class Calculator {
 
             seasonTeamDto = game.getAwayTeam();
 
-            if (seasonTeamMap.get(seasonTeamDto.getId()) == null){
+            if (seasonTeamMap.get(seasonTeamDto.getId()) == null) {
                 AggregatedSeasonTeamStatsDto agg = new AggregatedSeasonTeamStatsDto();
                 agg.setSeasonTeamDto(seasonTeamDto);
                 seasonTeamMap.put(seasonTeamDto.getId(), agg);
@@ -294,16 +288,14 @@ public class Calculator {
 
         Map<Integer, AggregatedTeamStatsDto> teamDictionary = new Hashtable<>();
 
-        Iterator iterator = games.iterator();
-        while (iterator.hasNext()){
+        for (GameDto game : games) {
 
-            GameDto game = (GameDto) iterator.next();
             TeamDto teamDto = game.getHomeTeam().getTeam();
 
-            if (teamDictionary.get(teamDto.getId()) == null){
+            if (teamDictionary.get(teamDto.getId()) == null) {
                 AggregatedTeamStatsDto agg = new AggregatedTeamStatsDto();
                 agg.setTeamDto(teamDto);
-                agg.setLast25Games(getLastXGames(teamDto.getId(),25));
+                agg.setLast25Games(getLastXGames(teamDto.getId(), 25));
                 teamDictionary.put(teamDto.getId(), agg);
             }
 
@@ -311,7 +303,7 @@ public class Calculator {
 
             teamDto = game.getAwayTeam().getTeam();
 
-            if (teamDictionary.get(teamDto.getId()) == null){
+            if (teamDictionary.get(teamDto.getId()) == null) {
                 AggregatedTeamStatsDto agg = new AggregatedTeamStatsDto();
                 agg.setTeamDto(teamDto);
                 teamDictionary.put(teamDto.getId(), agg);
@@ -335,15 +327,12 @@ public class Calculator {
         List<Double> yValues = new ArrayList<>();
 
         Set<Integer> keys = teamDictionary.keySet();
-        Iterator itr = keys.iterator();
 
-        while(itr.hasNext()){
-            int element = (Integer) itr.next();
-
+        for (int element : keys) {
             AggregatedSeasonTeamStatsDto agg = teamDictionary.get(element);
 
-            xValues.add(agg.getxGAgainst()/agg.getNrOfGames());
-            yValues.add(((double)agg.getCleanSheets()/agg.getNrOfGames()));
+            xValues.add(agg.getxGAgainst() / agg.getNrOfGames());
+            yValues.add(((double) agg.getCleanSheets() / agg.getNrOfGames()));
         }
 
         return Utility.getLinearRegressionCoefficents(xValues, yValues);

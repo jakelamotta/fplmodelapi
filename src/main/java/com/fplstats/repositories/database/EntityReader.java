@@ -290,11 +290,9 @@ public class EntityReader{
         Game next;
         GameDto gameDto;
 
-        Iterator it = games.iterator();
+        for (Game game : games) {
 
-        while (it.hasNext()){
-
-            next = (Game) it.next();
+            next = game;
 
             gameDtos.add(Mapper.mapGameDto(next));
         }

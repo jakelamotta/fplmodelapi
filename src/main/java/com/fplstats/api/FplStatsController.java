@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.time.LocalDate;
 import java.util.Map;
 
 
@@ -23,6 +22,7 @@ import java.util.Map;
 @RestController
 public class FplStatsController {
 
+    private static final String SUCCESS_STRING = "Success";
     private MatcherService matcherService;
     private DataCollectorService dataCollectorService;
     private DataImporterService importerService;
@@ -40,7 +40,8 @@ public class FplStatsController {
 
     @RequestMapping("/Model/Pick")
     public String pick(@RequestParam(name="iterations") long iterations){
-        String result = "Fel";
+
+        String result;
 
         try
         {
@@ -49,9 +50,9 @@ public class FplStatsController {
 
             Map<String, CalculatedPlayerStatisticsDto> players = picker.pickTeam(iterations);
 
-            for (String key: players.keySet()){
-                sum += players.get(key).getCost();
-                totalPoints += players.get(key).getxPAbs();
+            for (Map.Entry<String,CalculatedPlayerStatisticsDto> entry: players.entrySet()){
+                sum += ((CalculatedPlayerStatisticsDto) entry).getCost();
+                totalPoints += ((CalculatedPlayerStatisticsDto) entry).getxPAbs();
             }
 
             return new StringBuilder().append(players.get("G").getPlayerName()).append(" -- ")
@@ -266,7 +267,6 @@ public class FplStatsController {
         }
         catch (Exception e)
         {
-            System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -303,7 +303,6 @@ public class FplStatsController {
         }
         catch (Exception e)
         {
-            System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -324,7 +323,6 @@ public class FplStatsController {
         }
         catch (Exception e)
         {
-            System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -418,19 +416,19 @@ public class FplStatsController {
         {
             result = dataCollectorService.collectUnderstatBaseData(league,year);
 
-            if (result.equals("Success")){
+            if (result.equals(SUCCESS_STRING)){
                 result = importerService.importUnderstatPlayers(league,year);
 
-                if (result.equals("Success")){
+                if (result.equals(SUCCESS_STRING)){
                     result = importUnderstatTeams(league,year);
 
-                    if (result.equals("Success")){
+                    if (result.equals(SUCCESS_STRING)){
                         result = importerService.importUnderstatGames(league,year);
 
-                        if (result.equals("Success")){
+                        if (result.equals(SUCCESS_STRING)){
                             result = dataCollectorService.collectUnderstatNestedData(league, year);
 
-                            if (result.equals("Success")){
+                            if (result.equals(SUCCESS_STRING)){
                                 result = importerService.importUnderstatGamePlayers(league, year);
                             }
                         }
@@ -440,7 +438,6 @@ public class FplStatsController {
         }
         catch (Exception e)
         {
-            System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -466,31 +463,31 @@ public class FplStatsController {
 
                 result = importerService.importFplData();
 
-                if (result == "Success"){
+                if (result.equals(SUCCESS_STRING)){
 
                     result = dataCollectorService.collectUnderstatBaseData(league,year);
 
-                    if (result.equals("Success")){
+                    if (result.equals(SUCCESS_STRING)){
                         result = importerService.importUnderstatPlayers(league,year);
 
-                        if (result.equals("Success")){
+                        if (result.equals(SUCCESS_STRING)){
                             result = importerService.importUnderstatGames(league,year);
 
-                            if (result.equals("Success")){
+                            if (result.equals(SUCCESS_STRING)){
                                 result = dataCollectorService.collectUnderstatNestedData(league, year);
 
-                                if (result.equals("Success")){
+                                if (result.equals(SUCCESS_STRING)){
                                     result = importerService.importUnderstatGamePlayers(league, year);
 
-                                    if (result.equals("Success")){
+                                    if (result.equals(SUCCESS_STRING)){
 
                                         result = MatchAll();
 
-                                        if (result.equals("Success")){
+                                        if (result.equals(SUCCESS_STRING)){
 
                                             result = adaptAll(seasonDto.getId());
 
-                                            if (result.equals("Success")){
+                                            if (result.equals(SUCCESS_STRING)){
                                                 result = calculator.calculate(null, 0);
                                             }
                                         }
@@ -519,19 +516,19 @@ public class FplStatsController {
     private String adaptAll(int seasonId) throws NonExistingSeasonTeamPlayerException, NonExistingGameException, NonExistingTeamException {
         String result = matcherService.adaptFplPlayerData();
 
-        if (result != "Success"){
+        if (!result.equals(SUCCESS_STRING)){
             return  result;
         }
 
         result = matcherService.adaptUnderstatPlayers();
 
-        if (result != "Success"){
+        if (!result.equals(SUCCESS_STRING)){
             return  result;
         }
 
         result = matcherService.adaptTeams();
 
-        if (result != "Success"){
+        if (!result.equals(SUCCESS_STRING)){
             return  result;
         }
 
