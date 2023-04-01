@@ -7,7 +7,7 @@ from understat import Understat
 
 
 async def main(leagueName, year):
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(cookies={'beget':'begetok'}) as session:
         understat = Understat(session)
         data = await understat.get_teams(leagueName, year)
 
@@ -18,5 +18,6 @@ if __name__ == "__main__":
 
     #print()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     loop.run_until_complete(main(sys.argv[1], sys.argv[2]))

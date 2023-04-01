@@ -32,11 +32,18 @@ public class TeamPicker {
             double sum = 0.0;
             double totalPoints = 0.0;
 
-            players = pickTeam(10000, allPlayers);
+            try{
+                players = pickTeam(10000, allPlayers);
+            }
+            catch (Exception e){
+                var t = 1;
+            }
 
-            for (String key: players.keySet()){
-                sum += players.get(key).getCost();
-                totalPoints += players.get(key).getxPAbs();
+            for (var entry: players.values()) {
+                if (entry != null){
+                    sum += entry.getCost();
+                    totalPoints += entry.getxPAbs();
+                }
             }
 
             if (finalPoints < totalPoints){

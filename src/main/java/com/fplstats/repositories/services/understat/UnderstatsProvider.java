@@ -11,8 +11,8 @@ public class UnderstatsProvider {
     public Result<String> getTeams(String leagueName, int startYear) throws IOException, InterruptedException {
 
 
-        String basePath = "C:\\Users\\krist\\IdeaProjects\\fplmodelapi\\";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String path = basePath + "src\\main\\java\\com\\fplstats\\repositories\\services\\understat\\getTeams.py";
+        String basePath = "~/repos/fplmodelapi/";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String path = basePath + "src/main/java/com/fplstats/repositories/services/understat/getTeams.py";
 
 
         String[] args = new String[]{leagueName, String.valueOf(startYear)};
@@ -27,8 +27,10 @@ public class UnderstatsProvider {
 
 
         String[] args = new String[]{leagueName, String.valueOf(startYear)};
-        String basePath = "C:\\Users\\krist\\IdeaProjects\\fplmodelapi\\";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String path = basePath + "src\\main\\java\\com\\fplstats\\repositories\\services\\understat\\getPlayers.py";
+       // String basePath = "C:\\Users\\krist\\IdeaProjects\\fplmodelapi\\";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+       // String path = basePath + "src\\main\\java\\com\\fplstats\\repositories\\services\\understat\\getPlayers.py";
+        String basePath = "~/repos/fplmodelapi/";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String path = basePath + "src/main/java/com/fplstats/repositories/services/understat/getPlayers.py";
 
         Result<String> result = PythonUtility.ExecutePythonScript(path,args);
 
@@ -41,8 +43,8 @@ public class UnderstatsProvider {
 
         String[] args = new String[]{leagueName, String.valueOf(startYear)};
 
-        String basePath = "C:\\Users\\krist\\IdeaProjects\\fplmodelapi\\";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String path = basePath + "src\\main\\java\\com\\fplstats\\repositories\\services\\understat\\getLeagueResults.py";
+        String basePath = "~/repos/fplmodelapi/";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String path = basePath + "src/main/java/com/fplstats/repositories/services/understat/getLeagueResults.py";
 
         Result<String> result = PythonUtility.ExecutePythonScript(path, args);
 
@@ -53,8 +55,9 @@ public class UnderstatsProvider {
     public Result<String> getMatchPlayersByMatch(int gameId) throws IOException, InterruptedException {
         String[] args = new String[]{String.valueOf(gameId), ""};
 
-        String basePath = "C:\\Users\\krist\\IdeaProjects\\fplmodelapi\\";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String path = basePath + "src\\main\\java\\com\\fplstats\\repositories\\services\\understat\\getGamePlayers.py";
+        String basePath = "~/repos/fplmodelapi/";//UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        String path = basePath + "src/main/java/com/fplstats/repositories/services/understat/getGamePlayers.py";
+
 
         Result<String> result = PythonUtility.ExecutePythonScript(path, args);
 

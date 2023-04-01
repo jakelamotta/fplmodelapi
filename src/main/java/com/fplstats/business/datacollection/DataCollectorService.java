@@ -8,6 +8,7 @@ import com.fplstats.repositories.services.fpl.FplApiProvider;
 import com.fplstats.repositories.services.understat.UnderstatsProvider;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -21,7 +22,7 @@ public class DataCollectorService {
         entityReader = new EntityReader();
     }
 
-    public String collectFplData() throws IOException {
+    public void collectFplData() throws Exception {
 
         FplApiProvider provider = new FplApiProvider();
 
@@ -29,16 +30,8 @@ public class DataCollectorService {
         result.ErrorMessage =  "General error collectFplData";
 
         if (result.Success){
-
-            result = FileProvider.WriteFileContent(result.Data, "FPL\\data.txt");
+            FileProvider.WriteFileContent(result.Data, "FPL" , "data.txt");
         }
-
-
-        if (result.Success){
-            return "Success";
-        }
-
-        return result.ErrorMessage;
     }
 
     public String collectUnderstatNestedData(String leagueName, int startYear) throws IOException, InterruptedException {
@@ -59,7 +52,8 @@ public class DataCollectorService {
                 understatResult = understatsProvider.getMatchPlayersByMatch(matchId);
 
                 if (understatResult.Success){
-                    understatResult = FileProvider.WriteFileContent(understatResult.Data, "understat" + "\\" + leagueName + "\\" + startYear + "\\" + String.valueOf(matchId) + "\\"  +"games.txt");
+                    FileProvider.WriteFileContent(understatResult.Data, "understat" + File.separator + leagueName +
+                            File.separator + startYear + File.separator +  String.valueOf(matchId), "games.txt");
                 }
 
                 if (!understatResult.Success){
@@ -77,19 +71,19 @@ public class DataCollectorService {
         Result<String> result = understatsProvider.getTeams(leagueName,startYear);
 
         if (result.Success){
-            result = FileProvider.WriteFileContent(result.Data, "understat" + "\\" + leagueName + "\\" + startYear + "\\" + "teams.txt");
+            FileProvider.WriteFileContent(result.Data, "understat" + File.separator + leagueName + File.separator + startYear , "teams.txt");
         }
 
         result = understatsProvider.getPlayers(leagueName,startYear);
 
         if (result.Success){
-            result = FileProvider.WriteFileContent(result.Data, "understat" + "\\" + leagueName + "\\" + startYear + "\\" + "players.txt");
+            FileProvider.WriteFileContent(result.Data, "understat" + File.separator + leagueName + File.separator + startYear, "players.txt");
         }
 
         result = understatsProvider.getLeagueResults(leagueName,startYear);
 
         if (result.Success){
-            result = FileProvider.WriteFileContent(result.Data, "understat" + "\\" + leagueName + "\\" + startYear + "\\" + "results.txt");
+            FileProvider.WriteFileContent(result.Data, "understat" + File.separator + leagueName + File.separator + startYear,"results.txt");
         }
 
         if (result.Success){

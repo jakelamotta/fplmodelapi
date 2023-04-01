@@ -321,50 +321,55 @@ public class EntityReader{
 
         while (it.hasNext()){
 
-            understatGamePlayer = (UnderstatGamePlayer) it.next();
-            int playerId = getPlayerIdFromUnderstatid(understatGamePlayer.getUnderstatPlayerId());
-            TeamDto teamDto = getTeamFromUnderstatid(understatGamePlayer.getUnderstatTeamId());
+            try{
 
-            if (playerId == 0){
-                continue;
+                understatGamePlayer = (UnderstatGamePlayer) it.next();
+                int playerId = getPlayerIdFromUnderstatid(understatGamePlayer.getUnderstatPlayerId());
+                TeamDto teamDto = getTeamFromUnderstatid(understatGamePlayer.getUnderstatTeamId());
+
+                if (playerId == 0){
+                    continue;
+                }
+
+                if (teamDto == null){
+                    throw new NonExistingTeamException("Could not find team with id " + teamDto.getUnderstatId());
+                }
+                gameStatsDto = new GameStatsDto();
+
+                gameStatsDto.setUnderstatid(understatGamePlayer.getUnderstatId());
+                gameStatsDto.setAssists(understatGamePlayer.getAssists());
+                gameStatsDto.setGame(new GameDto());
+                gameStatsDto.getGame().setUnderstatid(understatGamePlayer.getUnderstatGameId());
+                gameStatsDto.getGame().setId(getGameByUnderstatId(understatGamePlayer.getUnderstatGameId()).getId());
+
+                gameStatsDto.setGoals(understatGamePlayer.getGoals());
+                gameStatsDto.setMinutesPlayed(understatGamePlayer.getTime());
+                gameStatsDto.setRedCards(understatGamePlayer.getRedCard());
+                gameStatsDto.setShots(understatGamePlayer.getShots());
+
+                gameStatsDto.setSeasonTeamPlayer(new SeasonTeamPlayerDto());
+                gameStatsDto.getSeasonTeamPlayer().setPlayer(new PlayerDto());
+                gameStatsDto.getSeasonTeamPlayer().getPlayer().setId(playerId);
+
+                gameStatsDto.getSeasonTeamPlayer().setSeasonTeam(new SeasonTeamDto());
+                gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().setTeam(new TeamDto());
+                gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setName(teamDto.getName());
+                gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setId(teamDto.getId());
+
+                gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().setSeason(new SeasonDto());
+                gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getSeason().setId(understatGamePlayer.getSeasonId());
+
+                gameStatsDto.setxA(understatGamePlayer.getxA());
+                gameStatsDto.setxG(understatGamePlayer.getxG());
+                gameStatsDto.setxGBuildup(understatGamePlayer.getxGBuildup());
+                gameStatsDto.setxGChain(understatGamePlayer.getxGChain());
+                gameStatsDto.setYellowCards(understatGamePlayer.getYellowCard());
+
+                result.Data.add(gameStatsDto);
             }
-
-            if (teamDto == null){
-                throw new NonExistingTeamException("Could not find team with id " + teamDto.getUnderstatId());
+            catch (Exception e){
+                var t = 1;
             }
-
-            gameStatsDto = new GameStatsDto();
-
-            gameStatsDto.setUnderstatid(understatGamePlayer.getUnderstatId());
-            gameStatsDto.setAssists(understatGamePlayer.getAssists());
-            gameStatsDto.setGame(new GameDto());
-            gameStatsDto.getGame().setUnderstatid(understatGamePlayer.getUnderstatGameId());
-            gameStatsDto.getGame().setId(getGameByUnderstatId(understatGamePlayer.getUnderstatGameId()).getId());
-
-            gameStatsDto.setGoals(understatGamePlayer.getGoals());
-            gameStatsDto.setMinutesPlayed(understatGamePlayer.getTime());
-            gameStatsDto.setRedCards(understatGamePlayer.getRedCard());
-            gameStatsDto.setShots(understatGamePlayer.getShots());
-
-            gameStatsDto.setSeasonTeamPlayer(new SeasonTeamPlayerDto());
-            gameStatsDto.getSeasonTeamPlayer().setPlayer(new PlayerDto());
-            gameStatsDto.getSeasonTeamPlayer().getPlayer().setId(playerId);
-
-            gameStatsDto.getSeasonTeamPlayer().setSeasonTeam(new SeasonTeamDto());
-            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().setTeam(new TeamDto());
-            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setName(teamDto.getName());
-            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getTeam().setId(teamDto.getId());
-
-            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().setSeason(new SeasonDto());
-            gameStatsDto.getSeasonTeamPlayer().getSeasonTeam().getSeason().setId(understatGamePlayer.getSeasonId());
-
-            gameStatsDto.setxA(understatGamePlayer.getxA());
-            gameStatsDto.setxG(understatGamePlayer.getxG());
-            gameStatsDto.setxGBuildup(understatGamePlayer.getxGBuildup());
-            gameStatsDto.setxGChain(understatGamePlayer.getxGChain());
-            gameStatsDto.setYellowCards(understatGamePlayer.getYellowCard());
-
-            result.Data.add(gameStatsDto);
         }
 
         result.Success = result.Data.size() >= 0;

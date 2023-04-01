@@ -7,10 +7,10 @@
 
         <properties>
             <property name="hibernate.connection.driver_class" value="com.mysql.cj.jdbc.Driver"/>
-            <property name="hibernate.connection.url" value="jdbc:mysql://localhost:3306/fpldata_dev?useJDBCCompliantTimezoneShift=true&amp;serverTimezone=UTC"/>
+            <property name="hibernate.connection.url" value="jdbc:mysql://localhost:3306/fpl?useJDBCCompliantTimezoneShift=true&amp;serverTimezone=UTC"/>
             <property name="hibernate.connection.autocommit" value="false"/>
             <property name="hibernate.connection.username" value="root"/>
-            <property name="hibernate.connection.password" value="REzuc5vyirNrT9nQpqyu"/>
+            <property name="hibernate.connection.password" value="password"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect"/>
             <property name="hibernate.connection.CharSet" value="utf8"/>
             <property name="hibernate.connection.characterEncoding" value="utf8"/>

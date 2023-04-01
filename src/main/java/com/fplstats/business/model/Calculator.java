@@ -29,7 +29,7 @@ public class Calculator {
         entityReader = new EntityReader();
     }
 
-    public String calculate(LocalDate startFrom, int nrOfDaysUsed) throws NonExistingGameException, NonExistingTeamException {
+    public void calculate(LocalDate startFrom, int nrOfDaysUsed) throws NonExistingGameException, NonExistingTeamException {
 
         LinearRegressionDto linearRegressionDto;
         Map<Integer, AggregatedPlayerStatsDto> playerDictionary = new Hashtable<>();
@@ -75,24 +75,15 @@ public class Calculator {
         }
 
         entityWriter.saveCalculatedStatistics(calcs);
-
-        return "Success";
     }
 
     private void addCsXp(AggregatedTeamStatsDto agg, CalculatedPlayerStatisticsDto calculatedPlayerStatistics, LinearRegressionDto linearRegressionDto) {
 
         double xCs = linearRegressionDto.getAlpha() + (agg.getxGAgainst()/agg.getNrOfGames())*linearRegressionDto.getBeta();
-
-
-
         if (xCs < 0.0){
             xCs = 0.0;
         }
-
-
-
         double xPCs = 0.0;
-
         switch (calculatedPlayerStatistics.getPosition().getId()){
             case 1:
                 System.out.println("Keeper");
@@ -106,7 +97,6 @@ public class Calculator {
                 xPCs = 0.0 * xCs;
                 break;
         }
-
 
         calculatedPlayerStatistics.incrementxPAbs(xPCs , null);
         //calculatedPlayerStatistics.incrementXPGame(xPCs * calculatedPlayerStatistics.getNrOfGames());

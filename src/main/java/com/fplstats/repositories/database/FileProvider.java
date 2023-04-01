@@ -5,81 +5,56 @@ import com.fplstats.repositories.services.understat.UnderstatsProvider;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import java.io.File;  // Import the File class
-import java.io.FileWriter;
-import java.io.IOException;  // Import the IOException class to handle errors
+
+import javax.swing.*;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 import static org.apache.tomcat.util.http.fileupload.FileUtils.deleteDirectory;
 
 public class FileProvider {
 
-    public static Result<String> WriteFileContent(String data, String filename) {
-        String currentPath = UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String basePath = currentPath + "\\..\\..\\src\\main\\resources\\data\\";
-        String path = basePath + filename;
-        Result<String> result = new Result<>();
-        result.Success = true;
+    private static String BASE_PATH = "data" + File.separator;
 
-        FileWriter dataFile = null;
+    public static void WriteFileContent(String data, String dir, String filename) throws IOException {
 
-        try {
-            File file = new File(path);
-            file.getParentFile().mkdirs();
-
-            dataFile = new FileWriter(path);
-
-            dataFile.write(data);
-            result.Data = dataFile.toString();
-
-            dataFile.close();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            result.Success = false;
-            return result;
+        if (!Files.exists(Path.of(BASE_PATH + dir))){
+            Files.createDirectories(Path.of(BASE_PATH + dir));
+        }
+        Path path = Path.of(BASE_PATH,dir,filename);
+        if (!Files.exists(path)){
+            Files.createFile(path);
         }
 
-        return result;
+
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path.toFile()))){
+
+
+            bufferedWriter.write(data);
+        }
     }
 
-    public static Result<String> ReadFileContent(String filename){
-        return ReadFileContent(filename, false);
+    public static String ReadFileContent(String fileName){
+        return ReadFileContent(fileName, false);
     }
 
-    public static Result<String> ReadFileContent(String filename, boolean absolutePath) {
-        String currentPath = UnderstatsProvider.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        String basePath = currentPath + "\\..\\..\\src\\main\\resources\\data\\";
-
+    public static String ReadFileContent(String filename, boolean absolutePath) {
         String path;
-
         if (absolutePath){
             path = filename;
         }
         else{
-            path = basePath + filename;
+            path = BASE_PATH + filename;
         }
-        Result<String> result = new Result<>();
-        result.Success = true;
-        result.Data = "";
 
-        try {
-            File file = new File(path);
-
-            Scanner myReader = new Scanner(file);
-
-            while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
-                result.Data += data;
-            }
-
-            myReader.close();
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(path))){
+            return bufferedReader.lines().reduce("", (s,t) -> s+t);
         } catch (IOException e) {
             System.out.println(e.getMessage());
-            result.Success = false;
-            return result;
         }
-
-        return result;
+        return null;
     }
 
     public static boolean DeleteItem(String path) throws IOException {

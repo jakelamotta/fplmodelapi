@@ -215,18 +215,23 @@ public class MatcherService {
 
         for (GameStatsDto gameStats : understatGameStatsResult.Data){
 
-            int gameId = gameStats.getGame().getId();
+            try{
+                int gameId = gameStats.getGame().getId();
 
-            if (!gameMap.containsKey(gameId)){
+                if (!gameMap.containsKey(gameId)){
 
-                tempList = new ArrayList<>();
+                    tempList = new ArrayList<>();
+                }
+                else {
+                    tempList = gameMap.get(gameId);
+                }
+
+                tempList.add(gameStats);
+                gameMap.put(gameId, tempList);
             }
-            else {
-                tempList = gameMap.get(gameId);
+            catch (Exception e){
+                var t = e;
             }
-
-            tempList.add(gameStats);
-            gameMap.put(gameId, tempList);
         }
 
         for (int gameId : gameMap.keySet()){

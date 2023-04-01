@@ -12,8 +12,7 @@ public class PythonUtility {
 
     public static Result<String> ExecutePythonScript(String path, String[] args) throws IOException, InterruptedException {
 
-        String command = "C:\\Users\\krist\\AppData\\Local\\Programs\\Python\\Python38-32\\python.exe";
-
+        String command = "python3";
 
         ProcessBuilder processBuilder =
                 new ProcessBuilder(command,path, args[0], args[1]);

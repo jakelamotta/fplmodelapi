@@ -10,12 +10,19 @@ import com.fplstats.common.dto.fplstats.SeasonDto;
 import com.fplstats.common.exception.NonExistingGameException;
 import com.fplstats.common.exception.NonExistingSeasonTeamPlayerException;
 import com.fplstats.common.exception.NonExistingTeamException;
+import javassist.bytecode.analysis.Executor;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @SpringBootApplication(scanBasePackages = "com.fplstats")
@@ -29,7 +36,7 @@ public class FplStatsController {
     private Calculator calculator;
     private TeamPicker picker;
 
-    public FplStatsController(){
+    public FplStatsController() {
 
         calculator = new Calculator();
         dataCollectorService = new DataCollectorService();
@@ -39,20 +46,22 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Model/Pick")
-    public String pick(@RequestParam(name="iterations") long iterations){
+    public String pick(@RequestParam(name = "iterations") long iterations) {
 
         String result;
 
-        try
-        {
-            double sum = 0.0;
-            double totalPoints = 0.0;
+        try {
+            AtomicReference<Double>  sum = new AtomicReference<>(0d);
+            AtomicReference<Double> totalPoints = new AtomicReference<>(0d);
 
             Map<String, CalculatedPlayerStatisticsDto> players = picker.pickTeam(iterations);
 
-            for (Map.Entry<String,CalculatedPlayerStatisticsDto> entry: players.entrySet()){
-                sum += ((CalculatedPlayerStatisticsDto) entry).getCost();
-                totalPoints += ((CalculatedPlayerStatisticsDto) entry).getxPAbs();
+            players.values().stream().forEach(e -> {
+                sum.accumulateAndGet(e.getCost(), (v, u) -> v+u);
+                totalPoints.accumulateAndGet(e.getxPAbs(), (v, u) -> v+u);
+            });
+            for (Map.Entry<String, CalculatedPlayerStatisticsDto> entry : players.entrySet()) {
+
             }
 
             return new StringBuilder().append(players.get("G").getPlayerName()).append(" -- ")
@@ -62,9 +71,7 @@ public class FplStatsController {
                     .append(players.get("M3").getPlayerName()).append(" ").append(players.get("M4").getPlayerName()).append(" -- ")
                     .append(players.get("F1").getPlayerName()).append(" ").append(players.get("F2").getPlayerName()).append(" ")
                     .append(players.get("F3").getPlayerName()).append(" -- ").append(sum).append(" -- ").append(totalPoints).toString();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -73,38 +80,30 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Model/Calculate")
-    public String calculate(){
-        String result = "Fel";
-
-        try
-        {
-            result = calculator.calculate(null, 0);
-        }
-        catch (Exception e)
-        {
+    public String calculate() {
+        try {
+            calculator.calculate(null, 0);
+        } catch (Exception e) {
             System.out.println(e.getMessage());
-            result = e.getMessage();
+            String result = e.getMessage();
+            return result;
         }
 
-        return result;
+        return "Success";
     }
 
     @RequestMapping("/")
-    public String Index(){
+    public String Index() {
         return "Greetings from Spring Boot!";
     }
 
     @RequestMapping("/Adapter/Adapt/FPL/Player")
-    public String AdaptFplData()
-    {
+    public String AdaptFplData() {
         String result = "Fel";
 
-        try
-        {
+        try {
             result = matcherService.adaptFplPlayerData();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -113,16 +112,13 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Adapter/Adapt/Understat/Team")
-    public String ApdatUnderstatTeam(){
+    public String ApdatUnderstatTeam() {
 
         String result = "Fel";
 
-        try
-        {
+        try {
             result = matcherService.adaptTeams();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -131,16 +127,13 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Adapter/Adapt/Understat/Game")
-    public String ApdatUnderstatGame(){
+    public String ApdatUnderstatGame() {
 
         String result = "Fel";
 
-        try
-        {
+        try {
             result = matcherService.adaptGames(0);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -149,16 +142,12 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Adapter/Match/Understat/Player")
-    public String MatchUnderstatPlayerData()
-    {
+    public String MatchUnderstatPlayerData() {
         String result = "Fel";
 
-        try
-        {
+        try {
             result = matcherService.matchUnderstatPlayer();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -167,16 +156,12 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Adapter/Adapt/Understat/Player")
-    public String AdaptUnderstatPlayerData()
-    {
+    public String AdaptUnderstatPlayerData() {
         String result = "Fel";
 
-        try
-        {
+        try {
             result = matcherService.adaptUnderstatPlayers();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -187,16 +172,12 @@ public class FplStatsController {
 
     @RequestMapping("/Import/Understat/GamePlayer")
     public String ImportUnderstatGamePlayers(@RequestParam(name = "league") String league,
-                                             @RequestParam(name = "year") int year){
+                                             @RequestParam(name = "year") int year) {
         String result = "Fel";
 
-        try
-        {
-            result = importerService.importUnderstatGamePlayers(league, year);
-        }
-        catch (Exception e)
-        {
-            System.out.println(e.getMessage());
+        try {
+            importerService.importUnderstatGamePlayers(league, year);
+        } catch (Exception e) {
             result = e.getMessage();
         }
 
@@ -205,15 +186,12 @@ public class FplStatsController {
 
     @RequestMapping("/Import/Understat/Game")
     public String ImportUnderstatGames(@RequestParam(name = "league") String league,
-                                       @RequestParam(name = "year") int year){
+                                       @RequestParam(name = "year") int year) {
         String result = "Fel";
 
-        try
-        {
-            result = importerService.importUnderstatGames(league,year);
-        }
-        catch (Exception e)
-        {
+        try {
+            importerService.importUnderstatGames(league, year);
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -223,15 +201,12 @@ public class FplStatsController {
 
     @RequestMapping("/Import/Understat/Team")
     public String importUnderstatTeams(@RequestParam(name = "league") String league,
-                                         @RequestParam(name = "year") int year){
+                                       @RequestParam(name = "year") int year) {
         String result = "Fel";
 
-        try
-        {
-            result = importerService.importUnderstatTeams(league,year);
-        }
-        catch (Exception e)
-        {
+        try {
+            importerService.importUnderstatTeams(league, year);
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -241,15 +216,12 @@ public class FplStatsController {
 
     @RequestMapping("/Import/Understat/Player")
     public String importUnderstatPlayers(@RequestParam(name = "league") String league,
-                                         @RequestParam(name = "year") int year){
+                                         @RequestParam(name = "year") int year) {
         String result = "Fel";
 
-        try
-        {
-            result = importerService.importUnderstatPlayers(league,year);
-        }
-        catch (Exception e)
-        {
+        try {
+            importerService.importUnderstatPlayers(league, year);
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -258,15 +230,12 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Import/Fpl/History")
-    public String importFplHistory(@RequestParam(name = "year") int year){
+    public String importFplHistory(@RequestParam(name = "year") int year) {
         String result = "Fel";
 
-        try
-        {
+        try {
             result = importerService.importFplHistory(year);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -276,20 +245,13 @@ public class FplStatsController {
 
     @RequestMapping("/Import/Fpl/Player")
     public String ImportFplData() {
-
-        String result = "Fel";
-
-        try
-        {
-            result = importerService.importFplData();
-        }
-        catch (Exception e)
-        {
-            System.out.println(e.getMessage());
-            result = e.getMessage();
+        try {
+            importerService.importFplData();
+        } catch (Exception e) {
+            return e.getMessage();
         }
 
-        return result;
+        return "Success!";
     }
 
     @RequestMapping("/Collect/Fpl")
@@ -297,12 +259,9 @@ public class FplStatsController {
 
         String result = "Fel";
 
-        try
-        {
-            result = dataCollectorService.collectFplData();
-        }
-        catch (Exception e)
-        {
+        try {
+            dataCollectorService.collectFplData();
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -317,12 +276,9 @@ public class FplStatsController {
 
         String result = "Fel";
 
-        try
-        {
+        try {
             result = dataCollectorService.collectUnderstatBaseData(league, year);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -337,12 +293,9 @@ public class FplStatsController {
 
         String result = "Fel";
 
-        try
-        {
+        try {
             result = dataCollectorService.collectUnderstatNestedData(league, year);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
@@ -352,15 +305,12 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Adapter/Match/All")
-    public String MatchAll(){
+    public String MatchAll() {
         String result = "Fel";
 
-        try
-        {
+        try {
             result = matcherService.matchUnderstatPlayer();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
@@ -371,15 +321,12 @@ public class FplStatsController {
 
     @RequestMapping("/Adapter/Match/Manual")
     public String MatchAll(@RequestParam(name = "understatname") String understatName,
-                           @RequestParam(name = "fplname") String fplname){
+                           @RequestParam(name = "fplname") String fplname) {
         String result = "Fel";
 
-        try
-        {
+        try {
             result = matcherService.matchManually(understatName, fplname);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
@@ -389,15 +336,12 @@ public class FplStatsController {
     }
 
     @RequestMapping("/Adapter/Adapt/All")
-    public String AdaptAll(){
+    public String AdaptAll() {
         String result = "Fel";
 
-        try
-        {
-
-        }
-        catch (Exception e)
-        {
+        try {
+            adaptAll(1);
+        } catch (Exception e) {
             System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
@@ -408,36 +352,27 @@ public class FplStatsController {
 
     @RequestMapping("/GetCompleteUnderstatSeason")
     public String getCompleteUnderstatSeason(@RequestParam(name = "league") String league,
-                                    @RequestParam(name = "year") int year) {
+                                             @RequestParam(name = "year") int year) {
 
         String result = "Fel";
 
-        try
-        {
-            result = dataCollectorService.collectUnderstatBaseData(league,year);
+        try {
+            result = dataCollectorService.collectUnderstatBaseData(league, year);
 
-            if (result.equals(SUCCESS_STRING)){
-                result = importerService.importUnderstatPlayers(league,year);
+            if (result.equals(SUCCESS_STRING)) {
+                importerService.importUnderstatPlayers(league, year);
+                result = importUnderstatTeams(league, year);
 
-                if (result.equals(SUCCESS_STRING)){
-                    result = importUnderstatTeams(league,year);
+                if (result.equals(SUCCESS_STRING)) {
+                    importerService.importUnderstatGames(league, year);
+                    result = dataCollectorService.collectUnderstatNestedData(league, year);
 
-                    if (result.equals(SUCCESS_STRING)){
-                        result = importerService.importUnderstatGames(league,year);
-
-                        if (result.equals(SUCCESS_STRING)){
-                            result = dataCollectorService.collectUnderstatNestedData(league, year);
-
-                            if (result.equals(SUCCESS_STRING)){
-                                result = importerService.importUnderstatGamePlayers(league, year);
-                            }
-                        }
+                    if (result.equals(SUCCESS_STRING)) {
+                        importerService.importUnderstatGamePlayers(league, year);
                     }
                 }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             result = e.getMessage();
         }
@@ -449,61 +384,61 @@ public class FplStatsController {
     @RequestMapping("/update")
     public String update() {
 
+        CountDownLatch countDownLatch = new CountDownLatch(2);
         String result = "Fel";
 
-        try
-        {
+        try {
             SeasonDto seasonDto = dataCollectorService.getActiveSeason();
             int year = seasonDto.getStartYear();
             String league = "EPL";
+            AtomicInteger errors = new AtomicInteger(0);
 
-            result = dataCollectorService.collectFplData();
+            Executors.newSingleThreadExecutor().execute(() -> {
+                try {
+                    dataCollectorService.collectFplData();
+                    importerService.importFplData();
+                }
+                catch (Exception e){
+                    errors.incrementAndGet();
+                }
+                countDownLatch.countDown();
+            });
 
-            if (result.equals("Success")){
+            result = dataCollectorService.collectUnderstatBaseData(league, year);
 
-                result = importerService.importFplData();
-
-                if (result.equals(SUCCESS_STRING)){
-
-                    result = dataCollectorService.collectUnderstatBaseData(league,year);
-
-                    if (result.equals(SUCCESS_STRING)){
-                        result = importerService.importUnderstatPlayers(league,year);
-
-                        if (result.equals(SUCCESS_STRING)){
-                            result = importerService.importUnderstatGames(league,year);
-
-                            if (result.equals(SUCCESS_STRING)){
-                                result = dataCollectorService.collectUnderstatNestedData(league, year);
-
-                                if (result.equals(SUCCESS_STRING)){
-                                    result = importerService.importUnderstatGamePlayers(league, year);
-
-                                    if (result.equals(SUCCESS_STRING)){
-
-                                        result = MatchAll();
-
-                                        if (result.equals(SUCCESS_STRING)){
-
-                                            result = adaptAll(seasonDto.getId());
-
-                                            if (result.equals(SUCCESS_STRING)){
-                                                result = calculator.calculate(null, 0);
-                                            }
-                                        }
-
-                                    }
-
-                                }
-                            }
-                        }
+            if (result.equals(SUCCESS_STRING)) {
+                Executors.newSingleThreadExecutor().execute(() -> {
+                    try {
+                        importerService.importUnderstatPlayers(league, year);
+                        importerService.importUnderstatGames(league, year);
+                        dataCollectorService.collectUnderstatNestedData(league, year);
+                        importerService.importUnderstatGamePlayers(league, year);
                     }
+                    catch (Exception e){
+                        errors.incrementAndGet();
+                    }
+                    countDownLatch.countDown();
+                });
 
+                countDownLatch.await();
+
+                if (errors.get() > 0){
+                    throw new Exception();
+                }
+                result = MatchAll();
+
+                if (result.equals(SUCCESS_STRING)) {
+
+                    result = adaptAll(seasonDto.getId());
+
+                    if (result.equals(SUCCESS_STRING)) {
+                        calculator.calculate(null, 0);
+                    }
                 }
             }
-        }
-        catch (Exception e)
-        {
+
+        } catch (
+                Exception e) {
             System.out.println("IOException");
             System.out.println(e.getMessage());
             result = e.getMessage();
@@ -516,20 +451,20 @@ public class FplStatsController {
     private String adaptAll(int seasonId) throws NonExistingSeasonTeamPlayerException, NonExistingGameException, NonExistingTeamException {
         String result = matcherService.adaptFplPlayerData();
 
-        if (!result.equals(SUCCESS_STRING)){
-            return  result;
+        if (!result.equals(SUCCESS_STRING)) {
+            return result;
         }
 
         result = matcherService.adaptUnderstatPlayers();
 
-        if (!result.equals(SUCCESS_STRING)){
-            return  result;
+        if (!result.equals(SUCCESS_STRING)) {
+            return result;
         }
 
         result = matcherService.adaptTeams();
 
-        if (!result.equals(SUCCESS_STRING)){
-            return  result;
+        if (!result.equals(SUCCESS_STRING)) {
+            return result;
         }
 
         result = matcherService.adaptGames(seasonId);

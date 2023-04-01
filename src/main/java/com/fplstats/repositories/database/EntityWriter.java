@@ -20,30 +20,34 @@ import java.util.List;
 @Repository
 public class EntityWriter implements IEntityWriter{
 
-    private EntityReader entityReader;
+    private final EntityManager manager;
+    private final EntityReader entityReader;
 
     public EntityWriter(){
         entityReader = new EntityReader();
+        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
+        manager = factory.createEntityManager();
     }
 
     public Result<String> saveFplPlayers(List<FplJsonObject> fplJsonObject) {
 
-        Iterator it = fplJsonObject.iterator();
-        FplJsonObject next;
-        FplPlayer player;
-
-        EntityManagerFactory factory = DatabaseUtility.getEntityManagerFactory();
-        EntityManager manager = factory.createEntityManager();
 
         Result<String> result = new Result<>();
         result.Success = true;
 
-        while (it.hasNext()){
-            next = (FplJsonObject) it.next();
+        fplJsonObject.stream().forEach(this::persistPlayer);
+        if (manager.getTransaction().isActive()){
+            manager.getTransaction().commit();
+        }
 
+        return result;
+    }
+
+    private void persistPlayer(FplJsonObject next) {
+        try{
             manager.getTransaction().begin();
 
-            player = manager.find(FplPlayer.class,next.getId());
+            FplPlayer player = manager.find(FplPlayer.class,next.getId());
 
             if (player == null){
                 player = new FplPlayer();
@@ -54,21 +58,20 @@ public class EntityWriter implements IEntityWriter{
             player.setBps(next.getBps());
             player.setElementType(next.getElement_type());
             player.setFirstName(next.getFirst_name());
+            if (next.getFirst_name().equals("Aleksandar")){
+                var t = 1;
+            }
             player.setNowCost(next.getNow_cost());
             player.setSaves(next.getSaves());
-            player.setSecondName(next.getSecond_name());
+            player.setSecondName(next.getSecond_name().replace("ć", "c"));
             player.setSelectedByPercent(next.getSelected_by_percent());
-
 
             manager.persist(player);
             manager.getTransaction().commit();
-
         }
-        if (manager.getTransaction().isActive()){
-            manager.getTransaction().commit();
+        catch (Exception e){
+            System.out.println(e.toString());
         }
-
-        return result;
     }
 
     public Result<String> saveUnderstatPlayers(String leagueName, int year, List<UnderstatPlayerJsonObject> understatPlayerJsonObjectList) {
